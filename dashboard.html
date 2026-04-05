@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C4 Emergency Operations Dashboard — Flood & Fire</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-panel: #1a2236;
+    --bg-card: #1e293b;
+    --bg-hover: #263348;
+    --border: #2a3654;
+    --border-light: #374766;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --critical: #ef4444;
+    --critical-bg: rgba(239,68,68,0.12);
+    --critical-border: rgba(239,68,68,0.3);
+    --high: #f97316;
+    --high-bg: rgba(249,115,22,0.12);
+    --high-border: rgba(249,115,22,0.3);
+    --medium: #eab308;
+    --medium-bg: rgba(234,179,8,0.10);
+    --medium-border: rgba(234,179,8,0.25);
+    --low: #6b7280;
+    --low-bg: rgba(107,114,128,0.10);
+    --low-border: rgba(107,114,128,0.25);
+    --accent: #3b82f6;
+    --accent-glow: rgba(59,130,246,0.2);
+    --success: #22c55e;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ── STATUS BAR (Panel 5) ───────────────────────── */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 48px;
+    z-index: 100;
+  }
+  .status-bar .title {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .status-bar .title .live-dot {
+    width: 8px; height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+    box-shadow: 0 0 6px var(--success);
+  }
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .status-metrics {
+    display: flex;
+    gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .metric {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .metric .label { color: var(--text-muted); }
+  .metric .value { color: var(--text-primary); font-weight: 600; }
+  .metric .value.alert { color: var(--critical); }
+  .metric .value.warning { color: var(--high); }
+
+  /* ── MAIN LAYOUT ────────────────────────────────── */
+  .dashboard-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr 400px;
+    height: calc(100vh - 48px);
+  }
+
+  /* ── LEFT: INCIDENT LIST (Panel 2) ──────────────── */
+  .incident-list {
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .list-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: var(--bg-secondary);
+    z-index: 10;
+  }
+  .list-header .count {
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+  .incident-card {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .incident-card:hover { background: var(--bg-hover); }
+  .incident-card.selected { background: var(--bg-hover); border-left: 3px solid var(--accent); }
+  .incident-card.flash { animation: card-flash 0.6s ease-out; }
+  @keyframes card-flash {
+    0% { background: rgba(59,130,246,0.15); }
+    100% { background: transparent; }
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .card-title {
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .urgency-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+  }
+  .urgency-badge.CRITICAL { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); }
+  .urgency-badge.HIGH { background: var(--high-bg); color: var(--high); border: 1px solid var(--high-border); }
+  .urgency-badge.MEDIUM { background: var(--medium-bg); color: var(--medium); border: 1px solid var(--medium-border); }
+  .urgency-badge.LOW { background: var(--low-bg); color: var(--low); border: 1px solid var(--low-border); }
+  .card-meta {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .card-meta span { display: flex; align-items: center; gap: 4px; }
+  .confidence-bar {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    display: inline-block;
+  }
+  .confidence-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .flag-icon {
+    font-size: 12px;
+    color: var(--high);
+  }
+
+  /* ── CENTER: MAP (Panel 1) ──────────────────────── */
+  .map-container {
+    position: relative;
+  }
+  #map {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+  }
+  .leaflet-container { background: var(--bg-primary) !important; }
+  .map-legend {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(17,24,39,0.92);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    z-index: 500;
+    font-size: 11px;
+    backdrop-filter: blur(8px);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+    color: var(--text-secondary);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid;
+  }
+
+  /* ── RIGHT: DETAIL PANEL (Panel 3 & 4) ─────────── */
+  .detail-panel {
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .detail-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .detail-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+  }
+  .detail-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .detail-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+  .detail-section {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .info-item .info-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .info-item .info-value {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .info-value.conflict {
+    color: var(--high);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .source-list { display: flex; flex-direction: column; gap: 6px; }
+  .source-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: var(--bg-card);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .source-channel {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .source-channel.voice { background: rgba(59,130,246,0.15); color: var(--accent); }
+  .source-channel.sms { background: rgba(34,197,94,0.15); color: var(--success); }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 20px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .timeline-entry {
+    position: relative;
+    padding: 6px 0 12px;
+    font-size: 12px;
+  }
+  .timeline-entry::before {
+    content: '';
+    position: absolute;
+    left: -17px;
+    top: 10px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-secondary);
+  }
+  .timeline-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .timeline-text {
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+  .timeline-source {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Flags */
+  .flags-container { display: flex; flex-wrap: wrap; gap: 4px; }
+  .flag-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(249,115,22,0.1);
+    color: var(--high);
+    border: 1px solid rgba(249,115,22,0.2);
+  }
+  .flag-tag.critical-flag {
+    background: rgba(239,68,68,0.1);
+    color: var(--critical);
+    border-color: rgba(239,68,68,0.2);
+  }
+
+  /* ── OPERATOR ACTIONS (Panel 4) ─────────────────── */
+  .actions-bar {
+    padding: 14px 16px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+  }
+  .action-btn.confirm { border-color: rgba(34,197,94,0.4); color: var(--success); }
+  .action-btn.confirm:hover { background: rgba(34,197,94,0.1); }
+  .action-btn.dismiss { border-color: rgba(239,68,68,0.3); color: var(--critical); }
+  .action-btn.dismiss:hover { background: rgba(239,68,68,0.1); }
+
+  /* ── NO DATA SCREEN ─────────────────────────────── */
+  .loading-screen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 1000;
+    font-family: var(--font-mono);
+  }
+  .loading-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .location-strings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .loc-string {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    background: var(--bg-card);
+    border-radius: 3px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ============================================================
+// URGENCY COLORS
+// ============================================================
+const URGENCY_COLORS = {
+  CRITICAL: { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+  HIGH:     { color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+  MEDIUM:   { color: '#eab308', bg: 'rgba(234,179,8,0.10)' },
+  LOW:      { color: '#6b7280', bg: 'rgba(107,114,128,0.10)' },
+};
+
+// ============================================================
+// STATUS BAR
+// ============================================================
+function StatusBar({ stats, uirCount, flaggedCount }) {
+  const latencyAlert = stats.pipeline_latency_ms > 10000;
+  const latencyWarn = stats.pipeline_latency_ms > 5000;
+  
+  return (
+    <div className="status-bar">
+      <div className="title">
+        <span className="live-dot"></span>
+        C4 INCIDENT FUSION ENGINE
+      </div>
+      <div className="status-metrics">
+        <div className="metric">
+          <span className="label">RPM</span>
+          <span className="value">{stats.reports_per_minute || 0}</span>
+        </div>
+        <div className="metric">
+          <span className="label">ACTIVE</span>
+          <span className="value">{uirCount}</span>
+        </div>
+        <div className="metric">
+          <span className="label">FLAGGED</span>
+          <span className={`value ${flaggedCount > 0 ? 'warning' : ''}`}>
+            {flaggedCount}
+          </span>
+        </div>
+        <div className="metric">
+          <span className="label">LATENCY</span>
+          <span className={`value ${latencyAlert ? 'alert' : latencyWarn ? 'warning' : ''}`}>
+            {stats.pipeline_latency_ms || 0}ms
+          </span>
+        </div>
+        <div className="metric">
+          <span className="label">REPORTS</span>
+          <span className="value">{stats.total_reports || 0}/300</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// INCIDENT LIST (Panel 2)
+// ============================================================
+function IncidentList({ uirs, selectedId, onSelect }) {
+  return (
+    <div className="incident-list">
+      <div className="list-header">
+        <span>ACTIVE INCIDENTS</span>
+        <span className="count">{uirs.length}</span>
+      </div>
+      {uirs.map(uir => (
+        <div
+          key={uir.uir_id}
+          className={`incident-card ${selectedId === uir.uir_id ? 'selected' : ''}`}
+          onClick={() => onSelect(uir)}
+        >
+          <div className="card-header">
+            <div className="card-title">
+              <span className={`urgency-badge ${uir.urgency}`}>{uir.urgency}</span>
+              <span>{uir.incident_type === 'fire' ? '🔥' : '🌊'} {uir.incident_type.toUpperCase()}</span>
+            </div>
+            {uir.flags.length > 0 && <span className="flag-icon">⚠</span>}
+          </div>
+          <div style={{fontSize: '12px', marginBottom: '4px', color: '#e2e8f0'}}>
+            📍 {uir.location.display_name}
+          </div>
+          <div className="card-meta">
+            <span>🔗 {uir.source_count} sources</span>
+            <span>👥 {uir.people_involved?.value ?? '—'}</span>
+            <span>
+              <span className="confidence-bar">
+                <span
+                  className="confidence-fill"
+                  style={{
+                    width: `${(uir.confidence || 0) * 100}%`,
+                    background: uir.confidence > 0.7 ? '#22c55e' : uir.confidence > 0.5 ? '#eab308' : '#ef4444'
+                  }}
+                />
+              </span>
+              {' '}{Math.round((uir.confidence || 0) * 100)}%
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// DETAIL PANEL (Panel 3 & 4)
+// ============================================================
+function DetailPanel({ uir, onAction }) {
+  if (!uir) {
+    return (
+      <div className="detail-panel">
+        <div className="detail-empty">
+          <span style={{fontSize: '24px'}}>📋</span>
+          <span>Select an incident to view details</span>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="detail-panel">
+      {/* Header */}
+      <div className="detail-header">
+        <div className="detail-title">
+          <span className={`urgency-badge ${uir.urgency}`}>{uir.urgency}</span>
+          {uir.incident_type === 'fire' ? '🔥' : '🌊'} {uir.incident_type.toUpperCase()} — {uir.location.display_name}
+        </div>
+        <div className="detail-subtitle">
+          {uir.uir_id} · Updated {uir.last_updated ? new Date(uir.last_updated).toLocaleTimeString() : '—'}
+        </div>
+      </div>
+      
+      {/* Info Grid */}
+      <div className="detail-section">
+        <div className="section-title">Incident Intelligence</div>
+        <div className="info-grid">
+          <div className="info-item">
+            <div className="info-label">People Involved</div>
+            <div className={`info-value ${uir.people_involved?.conflict ? 'conflict' : ''}`}>
+              {uir.people_involved?.value ?? '—'}
+              {uir.people_involved?.conflict && ' ⚠'}
+            </div>
+          </div>
+          <div className="info-item">
+            <div className="info-label">Confidence</div>
+            <div className="info-value">{Math.round((uir.confidence || 0) * 100)}%</div>
+          </div>
+          <div className="info-item">
+            <div className="info-label">Location</div>
+            <div className="info-value" style={{fontSize: '12px'}}>
+              {uir.location.resolved ? '✅' : '⚠️'} {uir.location.display_name}
+            </div>
+          </div>
+          <div className="info-item">
+            <div className="info-label">Sources</div>
+            <div className="info-value">
+              {uir.sources?.filter(s => s.channel === 'voice').length || 0} calls,{' '}
+              {uir.sources?.filter(s => s.channel === 'sms').length || 0} SMS
+            </div>
+          </div>
+        </div>
+        {uir.location.source_strings?.length > 1 && (
+          <div className="location-strings">
+            {uir.location.source_strings.map((s, i) => (
+              <span key={i} className="loc-string">{s}</span>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Flags */}
+      {uir.flags.length > 0 && (
+        <div className="detail-section">
+          <div className="section-title">Flags</div>
+          <div className="flags-container">
+            {uir.flags.map((flag, i) => (
+              <span key={i} className={`flag-tag ${flag.includes('operator') ? 'critical-flag' : ''}`}>
+                {flag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Sources */}
+      <div className="detail-section">
+        <div className="section-title">Contributing Sources</div>
+        <div className="source-list">
+          {(uir.sources || []).map((src, i) => (
+            <div key={i} className="source-item">
+              <span className={`source-channel ${src.channel}`}>
+                {src.channel === 'voice' ? '📞 CALL' : '💬 SMS'}
+              </span>
+              <span style={{fontFamily: 'var(--font-mono)', fontSize: '11px'}}>{src.id}</span>
+              <span style={{color: 'var(--text-muted)', fontSize: '11px', marginLeft: 'auto'}}>
+                {Math.round(src.confidence * 100)}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Timeline */}
+      <div className="detail-section">
+        <div className="section-title">Incident Timeline</div>
+        <div className="timeline">
+          {(uir.timeline || []).map((entry, i) => (
+            <div key={i} className="timeline-entry">
+              <div className="timeline-time">{entry.time}</div>
+              <div className="timeline-text">{entry.summary}</div>
+              <div className="timeline-source">
+                {entry.channel === 'voice' ? '📞' : '💬'} {entry.source}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Linked UIRs */}
+      {uir.linked_uirs?.length > 0 && (
+        <div className="detail-section">
+          <div className="section-title">Linked Possible Duplicates</div>
+          {uir.linked_uirs.map((id, i) => (
+            <div key={i} style={{
+              fontSize: '12px',
+              padding: '4px 8px',
+              background: 'var(--bg-card)',
+              borderRadius: '4px',
+              marginBottom: '4px',
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--high)',
+            }}>
+              🔗 {id}
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {/* Operator Actions (Panel 4) */}
+      <div className="detail-section">
+        <div className="section-title">Operator Actions</div>
+        <div className="actions-bar">
+          <button className="action-btn confirm" onClick={() => onAction(uir.uir_id, 'confirm')}>
+            ✓ CONFIRM
+          </button>
+          <button className="action-btn" onClick={() => onAction(uir.uir_id, 'split')}>
+            ✂ SPLIT
+          </button>
+          <button className="action-btn" onClick={() => onAction(uir.uir_id, 'merge')}>
+            ⊕ MERGE
+          </button>
+          <button className="action-btn" onClick={() => onAction(uir.uir_id, 'correct')}>
+            ✎ CORRECT
+          </button>
+          <button className="action-btn dismiss" onClick={() => onAction(uir.uir_id, 'dismiss')}>
+            ✕ DISMISS
+          </button>
+        </div>
+      </div>
+      
+      {/* Action Log */}
+      {uir.operator_actions?.length > 0 && (
+        <div className="detail-section">
+          <div className="section-title">Action Log</div>
+          {uir.operator_actions.map((action, i) => (
+            <div key={i} style={{
+              fontSize: '11px', color: 'var(--text-muted)',
+              padding: '4px 0', borderBottom: '1px solid var(--border)',
+              fontFamily: 'var(--font-mono)',
+            }}>
+              [{action.timestamp?.substring(11,19) || '—'}] {action.action} by {action.operator_id}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// MAP COMPONENT (Panel 1)
+// ============================================================
+function MapPanel({ uirs, selectedId, onSelect }) {
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const markersRef = useRef({});
+  
+  // Initialize map
+  useEffect(() => {
+    if (mapInstance.current) return;
+    
+    const map = L.map(mapRef.current, {
+      center: [7.0, 80.0],
+      zoom: 8,
+      zoomControl: true,
+    });
+    
+    // Dark tile layer
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      maxZoom: 19,
+    }).addTo(map);
+    
+    mapInstance.current = map;
+    
+    return () => {
+      map.remove();
+      mapInstance.current = null;
+    };
+  }, []);
+  
+  // Update markers when UIRs change
+  useEffect(() => {
+    if (!mapInstance.current) return;
+    const map = mapInstance.current;
+    
+    // Remove old markers
+    Object.values(markersRef.current).forEach(m => map.removeLayer(m));
+    markersRef.current = {};
+    
+    // Add new markers
+    uirs.forEach(uir => {
+      if (!uir.location?.lat || !uir.location?.lng) return;
+      
+      const colors = URGENCY_COLORS[uir.urgency] || URGENCY_COLORS.LOW;
+      const isSelected = uir.uir_id === selectedId;
+      const hasConflict = uir.flags?.length > 0;
+      const isFire = uir.incident_type === 'fire';
+      const size = isSelected ? 16 : (uir.urgency === 'CRITICAL' ? 12 : 10);
+      const shape = isFire ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : '50%';
+      
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="
+          width: ${size}px;
+          height: ${size}px;
+          background: ${isFire ? '#f97316' : colors.color};
+          ${isFire ? 'clip-path: polygon(50% 0%, 0% 100%, 100% 100%);' : 'border-radius: 50%;'}
+          border: 2px solid ${isSelected ? '#fff' : 'rgba(255,255,255,0.3)'};
+          box-shadow: 0 0 ${isSelected ? 12 : 6}px ${isFire ? '#f97316' : colors.color};
+          ${uir.urgency === 'CRITICAL' ? 'animation: pulse-dot 1.5s infinite;' : ''}
+          position: relative;
+        ">${hasConflict ? '<span style="position:absolute;top:-6px;right:-6px;font-size:10px;">⚠</span>' : ''}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2],
+      });
+      
+      const marker = L.marker([uir.location.lat, uir.location.lng], { icon })
+        .addTo(map)
+        .bindTooltip(`<b>${uir.location.display_name}</b><br>${uir.incident_type === 'fire' ? '🔥 FIRE' : '🌊 FLOOD'} · ${uir.urgency} · ${uir.source_count} sources`, {
+          className: 'dark-tooltip',
+          direction: 'top',
+        })
+        .on('click', () => onSelect(uir));
+      
+      markersRef.current[uir.uir_id] = marker;
+    });
+  }, [uirs, selectedId, onSelect]);
+  
+  return (
+    <div className="map-container">
+      <div id="map" ref={mapRef}></div>
+      <div className="map-legend">
+        <div style={{fontWeight: 600, marginBottom: '6px', color: '#e2e8f0', fontSize: '11px'}}>MAP LEGEND</div>
+        {Object.entries(URGENCY_COLORS).map(([level, c]) => (
+          <div key={level} className="legend-item">
+            <div className="legend-dot" style={{background: c.color, borderColor: c.color}}></div>
+            {level}
+          </div>
+        ))}
+        <div className="legend-item" style={{marginTop: '4px'}}>
+          <span>⚠</span> Conflict / Review Required
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN APP
+// ============================================================
+function App() {
+  const [uirs, setUirs] = useState([]);
+  const [selectedUir, setSelectedUir] = useState(null);
+  const [stats, setStats] = useState({});
+  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const wsRef = useRef(null);
+  
+  // ── Load data: HTTP first (instant), then try WebSocket for live updates ──
+  useEffect(() => {
+    let poll = null;
+    
+    async function loadHTTP() {
+      try {
+        const res = await fetch('/api/uirs');
+        if (!res.ok) return false;
+        const data = await res.json();
+        setUirs(data.uirs || []);
+        if (data.stats) setStats(data.stats);
+        setLoading(false);
+        setConnected(true);
+        return true;
+      } catch(e) { return false; }
+    }
+    
+    function tryWS() {
+      try {
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(proto + '//' + location.host + '/ws/dashboard');
+        wsRef.current = ws;
+        ws.onmessage = (ev) => {
+          const d = JSON.parse(ev.data);
+          if (d.type === 'init') { setUirs(d.uirs||[]); if(d.stats) setStats(d.stats); setLoading(false); if(poll){clearInterval(poll);poll=null;} }
+          else if (d.type === 'uir_update') {
+            if(d.stats) setStats(d.stats);
+            setUirs(p => { const i = p.findIndex(u=>u.uir_id===d.uir.uir_id); if(i>=0){const c=[...p];c[i]=d.uir;return c;} return [...p,d.uir]; });
+            setSelectedUir(p => p && p.uir_id===d.uir.uir_id ? d.uir : p);
+          }
+        };
+        ws.onclose = () => { if(!poll) poll = setInterval(loadHTTP, 3000); };
+        ws.onerror = () => ws.close();
+      } catch(e) {}
+    }
+    
+    async function init() {
+      const ok = await loadHTTP();
+      if (ok) tryWS();
+      else poll = setInterval(async()=>{ if(await loadHTTP()) tryWS(); }, 2000);
+    }
+    init();
+    
+    return () => { if(poll) clearInterval(poll); if(wsRef.current) wsRef.current.close(); };
+  }, []);
+  
+  // ── Operator Actions ────────────────────────────
+  const handleAction = useCallback(async (uirId, actionType) => {
+    try {
+      const res = await fetch(`/api/uirs/${uirId}/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action_type: actionType,
+          operator_id: 'operator_001',
+          note: `${actionType} via dashboard`,
+        }),
+      });
+      
+      if (actionType === 'dismiss') {
+        setUirs(prev => prev.filter(u => u.uir_id !== uirId));
+        setSelectedUir(null);
+      }
+    } catch (err) {
+      console.error('Action failed:', err);
+    }
+  }, []);
+  
+  // ── Sort UIRs: CRITICAL pinned top ──────────────
+  const sortedUirs = [...uirs]
+    .filter(u => u.status === 'active' || u.status === 'confirmed')
+    .sort((a, b) => {
+      const order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+      return (order[a.urgency] || 4) - (order[b.urgency] || 4);
+    });
+  
+  const flaggedCount = sortedUirs.filter(u => u.flags?.length > 0).length;
+  
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner"></div>
+        <div style={{marginBottom:'8px'}}>Connecting to C4 Pipeline...</div>
+        <div style={{fontSize:'11px',color:'#64748b'}}>Make sure server is running: python server.py</div>
+      </div>
+    );
+  }
+  
+  return (
+    <div>
+      <StatusBar
+        stats={stats}
+        uirCount={sortedUirs.length}
+        flaggedCount={flaggedCount}
+      />
+      <div className="dashboard-layout">
+        <IncidentList
+          uirs={sortedUirs}
+          selectedId={selectedUir?.uir_id}
+          onSelect={setSelectedUir}
+        />
+        <MapPanel
+          uirs={sortedUirs}
+          selectedId={selectedUir?.uir_id}
+          onSelect={setSelectedUir}
+        />
+        <DetailPanel
+          uir={selectedUir}
+          onAction={handleAction}
+        />
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+
+<style>
+  /* Dark tooltip for Leaflet */
+  .dark-tooltip {
+    background: rgba(17,24,39,0.95) !important;
+    border: 1px solid #2a3654 !important;
+    color: #e2e8f0 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  }
+  .dark-tooltip::before {
+    border-top-color: rgba(17,24,39,0.95) !important;
+  }
+</style>
+</body>
+</html>
