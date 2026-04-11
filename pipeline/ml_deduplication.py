@@ -48,7 +48,7 @@ except ImportError:
     _XGB = False
 
 try:
-    from sklearn.ensemble import GradientBoostingClassifier
+    from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import train_test_split
     from sklearn.metrics import (classification_report, roc_auc_score,
@@ -56,6 +56,12 @@ try:
     _SKLEARN = True
 except ImportError:
     _SKLEARN = False
+
+try:
+    import lightgbm as lgb
+    _LGB = True
+except ImportError:
+    _LGB = False
 
 # ── geo / temporal helpers (same as clustering.py, no circular import) ────────
 
@@ -283,6 +289,7 @@ class MLDeduplicator:
         self._trained = False
         self._finetuned = False
         self._metrics: dict = {}
+        self._comparison: dict = {}   # stores last train_compare() results
 
         self._load()
 
@@ -368,7 +375,8 @@ class MLDeduplicator:
         """
         Train the pairwise classifier.
 
-        method: 'xgboost' | 'gradientboost' | 'logistic' | 'auto'
+        method: 'xgboost' | 'random_forest' | 'lightgbm' |
+                'gradientboost' | 'logistic' | 'auto'
           auto → XGBoost if available, else GradientBoosting, else Logistic
 
         Returns evaluation metrics dict.
@@ -395,54 +403,75 @@ class MLDeduplicator:
             X, y, test_size=0.2, random_state=42, stratify=y
         )
 
-        # Choose classifier
+        clf = self._build_classifier(method, y_tr)
+        clf.fit(X_tr, y_tr)
+        self._clf = clf
+        self._trained = True
+
+        metrics = self._evaluate(clf, method, X_val, y_val, len(y_tr))
+        self._metrics = metrics
+
+        self.save()
+        return self._metrics
+
+    def _build_classifier(self, method: str, y_tr: np.ndarray):
+        """Instantiate the chosen classifier."""
         if method == 'auto':
-            method = 'xgboost' if _XGB else 'gradientboost'
+            method = 'xgboost' if _XGB else 'lightgbm' if _LGB else 'gradientboost'
 
         if method == 'xgboost' and _XGB:
-            n_pos, n_neg = y_tr.sum(), (y_tr == 0).sum()
-            clf = xgb.XGBClassifier(
+            n_pos, n_neg = int(y_tr.sum()), int((y_tr == 0).sum())
+            return xgb.XGBClassifier(
                 n_estimators=200, max_depth=4, learning_rate=0.1,
                 scale_pos_weight=n_neg / max(n_pos, 1),
                 use_label_encoder=False, eval_metric='logloss',
                 random_state=42, verbosity=0,
             )
-        elif method == 'gradientboost':
-            clf = GradientBoostingClassifier(
+        if method == 'lightgbm' and _LGB:
+            n_pos, n_neg = int(y_tr.sum()), int((y_tr == 0).sum())
+            return lgb.LGBMClassifier(
+                n_estimators=200, max_depth=4, learning_rate=0.1,
+                scale_pos_weight=n_neg / max(n_pos, 1),
+                random_state=42, verbosity=-1,
+            )
+        if method == 'random_forest':
+            return RandomForestClassifier(
+                n_estimators=200, max_depth=None,
+                class_weight='balanced', random_state=42, n_jobs=-1,
+            )
+        if method == 'gradientboost':
+            return GradientBoostingClassifier(
                 n_estimators=200, max_depth=4, learning_rate=0.1,
                 random_state=42,
             )
-        else:
-            clf = LogisticRegression(C=1.0, max_iter=500, class_weight='balanced',
-                                     random_state=42)
+        # logistic / fallback
+        return LogisticRegression(C=1.0, max_iter=500, class_weight='balanced',
+                                  random_state=42)
 
-        clf.fit(X_tr, y_tr)
-        self._clf = clf
-        self._trained = True
-
-        # Evaluate
+    def _evaluate(self, clf, method: str, X_val: np.ndarray,
+                  y_val: np.ndarray, n_train: int) -> dict:
+        """Score a fitted classifier and return a metrics dict."""
         y_pred = clf.predict(X_val)
         y_prob = clf.predict_proba(X_val)[:, 1]
-        p, r, f1, _ = precision_recall_fscore_support(y_val, y_pred, average='binary',
-                                                       zero_division=0)
+        p, r, f1, _ = precision_recall_fscore_support(
+            y_val, y_pred, average='binary', zero_division=0)
         try:
             auc = roc_auc_score(y_val, y_prob)
         except Exception:
             auc = 0.0
 
-        self._metrics = {
+        print(f"  [MLDedup] Trained ({method}) | "
+              f"P={p:.3f} R={r:.3f} F1={f1:.3f} AUC={auc:.3f}")
+
+        result = {
             'method': method,
-            'n_train': len(y_tr), 'n_val': len(y_val),
+            'n_train': n_train, 'n_val': len(y_val),
             'precision': round(float(p), 4),
             'recall': round(float(r), 4),
             'f1': round(float(f1), 4),
             'auc_roc': round(float(auc), 4),
         }
 
-        print(f"  [MLDedup] Trained ({method}) | "
-              f"P={p:.3f} R={r:.3f} F1={f1:.3f} AUC={auc:.3f}")
-
-        # Feature importance (tree-based only)
         if hasattr(clf, 'feature_importances_'):
             fi = dict(zip(self.FEATURE_NAMES, clf.feature_importances_))
             fi_sorted = sorted(fi.items(), key=lambda x: -x[1])
@@ -450,11 +479,87 @@ class MLDeduplicator:
             for feat, imp in fi_sorted[:5]:
                 bar = '█' * int(imp * 30)
                 print(f"    {feat:15s} {imp:.3f}  {bar}")
-            self._metrics['feature_importance'] = {k: round(float(v), 4)
-                                                    for k, v in fi.items()}
+            result['feature_importance'] = {k: round(float(v), 4) for k, v in fi.items()}
+
+        return result
+
+    # ── multi-algorithm comparison ─────────────────────────────────────────────
+
+    def train_compare(self, reports: list) -> dict:
+        """
+        Train XGBoost, Random Forest, and LightGBM on the same train/val split,
+        compare their metrics side-by-side, then activate the best model
+        (highest AUC) as the live classifier.
+
+        Returns a dict with per-algorithm results and the chosen winner.
+        """
+        if not _SKLEARN:
+            return {"error": "scikit-learn not available"}
+
+        print("  [MLDedup] Generating training pairs for comparison...")
+        gen = PairGenerator()
+        pairs = gen.generate(reports, neg_ratio=3.0)
+
+        if len(pairs) < 50:
+            return {"error": f"only {len(pairs)} pairs — need more data"}
+
+        X = np.array([self.extract_features(a, b) for a, b, _ in pairs])
+        y = np.array([lbl for _, _, lbl in pairs])
+        X_tr, X_val, y_tr, y_val = train_test_split(
+            X, y, test_size=0.2, random_state=42, stratify=y
+        )
+
+        candidates = []
+        if _XGB:
+            candidates.append('xgboost')
+        candidates.append('random_forest')
+        if _LGB:
+            candidates.append('lightgbm')
+
+        print(f"\n  {'='*55}")
+        print(f"  ALGORITHM COMPARISON  ({len(y_tr)} train / {len(y_val)} val pairs)")
+        print(f"  {'='*55}")
+
+        results = {}
+        best_method, best_clf, best_auc = None, None, -1.0
+
+        for method in candidates:
+            print(f"\n  ── {method} ──")
+            clf = self._build_classifier(method, y_tr)
+            t0 = time.time()
+            clf.fit(X_tr, y_tr)
+            elapsed = time.time() - t0
+            m = self._evaluate(clf, method, X_val, y_val, len(y_tr))
+            m['train_seconds'] = round(elapsed, 2)
+            results[method] = m
+
+            if m['auc_roc'] > best_auc:
+                best_auc = m['auc_roc']
+                best_method = method
+                best_clf = clf
+
+        # Print comparison table
+        print(f"\n  {'─'*55}")
+        print(f"  {'Algorithm':15s}  {'F1':>6}  {'AUC':>6}  {'Precision':>9}  {'Recall':>6}  {'Secs':>5}")
+        print(f"  {'─'*55}")
+        for m_name, m in results.items():
+            marker = ' ◀ best' if m_name == best_method else ''
+            print(f"  {m_name:15s}  {m['f1']:6.4f}  {m['auc_roc']:6.4f}  "
+                  f"{m['precision']:9.4f}  {m['recall']:6.4f}  {m['train_seconds']:5.1f}s{marker}")
+        print(f"  {'─'*55}")
+
+        # Activate the best model
+        self._clf = best_clf
+        self._trained = True
+        self._metrics = results[best_method]
+        self._comparison = {
+            'algorithms': results,
+            'best': best_method,
+            'best_auc': best_auc,
+        }
 
         self.save()
-        return self._metrics
+        return self._comparison
 
     # ── fine-tuning (optional) ────────────────────────────────────────────────
 
@@ -632,6 +737,7 @@ class MLDeduplicator:
                 'trained': self._trained,
                 'finetuned': self._finetuned,
                 'metrics': self._metrics,
+                'comparison': self._comparison,
             }, f)
 
     def _load(self):
@@ -643,6 +749,7 @@ class MLDeduplicator:
                 self._trained = state.get('trained', False)
                 self._finetuned = state.get('finetuned', False)
                 self._metrics = state.get('metrics', {})
+                self._comparison = state.get('comparison', {})
             except Exception:
                 pass
 
@@ -668,11 +775,18 @@ class MLDeduplicator:
     def metrics(self) -> dict:
         return self._metrics
 
+    @property
+    def comparison(self) -> dict:
+        return self._comparison
+
     def status_line(self) -> str:
         if self._trained:
             m = self._metrics
+            cmp = (f" | best of {len(self._comparison['algorithms'])} algos"
+                   if self._comparison else "")
             return (f"[MLDedup] TRAINED ({m.get('method','?')}) | "
-                    f"F1={m.get('f1','?')} AUC={m.get('auc_roc','?')} | "
+                    f"F1={m.get('f1','?')} AUC={m.get('auc_roc','?')}"
+                    f"{cmp} | "
                     f"fine-tuned={'yes' if self._finetuned else 'no'}")
         return "[MLDedup] NOT TRAINED — using fixed-weight fallback"
 
@@ -756,10 +870,11 @@ if __name__ == '__main__':
     dedup = MLDeduplicator(Path('data'))
 
     print("\n" + "="*60)
-    print("  STEP 1: Train pairwise classifier")
+    print("  STEP 1: Compare XGBoost vs Random Forest vs LightGBM")
     print("="*60)
-    metrics = dedup.train(reports, method='auto')
-    print(f"\n  Final metrics: {metrics}")
+    comparison = dedup.train_compare(reports)
+    print(f"\n  Best algorithm: {comparison.get('best')}  "
+          f"(AUC={comparison.get('best_auc', '?')})")
 
     print("\n" + "="*60)
     print("  STEP 2: Cross-lingual AUC breakdown")

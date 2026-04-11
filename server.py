@@ -273,12 +273,15 @@ async def get_model_status():
 
 @app.get("/api/ml/status")
 async def ml_status():
+    ml_dedup_info = {
+        "trained": ML_DEDUP.is_trained,
+        "finetuned": ML_DEDUP.is_finetuned,
+        "metrics": ML_DEDUP.metrics,
+    }
+    if ML_DEDUP.comparison:
+        ml_dedup_info["comparison"] = ML_DEDUP.comparison
     return {
-        "ml_dedup": {
-            "trained": ML_DEDUP.is_trained,
-            "finetuned": ML_DEDUP.is_finetuned,
-            "metrics": ML_DEDUP.metrics,
-        },
+        "ml_dedup": ml_dedup_info,
         "similarity_model": {
             "trained": SIMILARITY_MODEL.is_trained,
             "weights": SIMILARITY_MODEL.weights,
@@ -299,6 +302,23 @@ async def ml_train(body: dict = None):
     if body.get("finetune"):
         ML_DEDUP.fine_tune(EMBEDDED_REPORTS, epochs=body.get("epochs", 3))
     return {"status": "ok", "metrics": metrics}
+
+@app.post("/api/ml/compare")
+async def ml_compare():
+    """
+    Train XGBoost, Random Forest, and MLP on the same data split and return
+    a side-by-side accuracy comparison. The best model (highest AUC) is
+    automatically activated as the live deduplicator.
+    """
+    result = ML_DEDUP.train_compare(EMBEDDED_REPORTS)
+    return {"status": "ok", **result}
+
+@app.get("/api/ml/compare")
+async def ml_compare_status():
+    """Return the most recent algorithm comparison results (if available)."""
+    if not ML_DEDUP.comparison:
+        return {"message": "No comparison run yet. POST /api/ml/compare to start."}
+    return ML_DEDUP.comparison
 
 @app.get("/api/ml/cross_lingual")
 async def ml_cross_lingual():
