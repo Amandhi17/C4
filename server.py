@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from pipeline.normalizer import normalize_batch, reset_counters
-from pipeline.gazetteer import resolve_batch
+from pipeline.gazetteer import resolve_batch, _GMAPS_API_KEY
 from pipeline.embedder import embed_batch
 from pipeline.clustering import (
     IncidentClusterEngine, evaluate_clustering,
@@ -286,6 +286,11 @@ async def ml_status():
             "trained": SIMILARITY_MODEL.is_trained,
             "weights": SIMILARITY_MODEL.weights,
             "n_examples": SIMILARITY_MODEL.n_examples,
+        },
+        "geocoding": {
+            "provider": "google_maps" if _GMAPS_API_KEY else "nominatim",
+            "google_maps_enabled": bool(_GMAPS_API_KEY),
+            "note": "Set GOOGLE_MAPS_API_KEY env var to enable Google Maps geocoding",
         },
         "database": {
             "connected": DB.connected if DB else False,

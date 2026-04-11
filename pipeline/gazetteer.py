@@ -5,24 +5,28 @@ Resolution chain — each stage catches what the previous missed:
 
   A:   Exact match        — instant, GN-division or town level
   A.5: Address fast-path  — detects "No 45/B, Kandy Road, Kelaniya" patterns
-                            and routes directly to Nominatim (street-level).
-                            Falls back to city extraction from the address if
-                            Nominatim is offline/uncached.
+                            and routes directly to Google Maps / Nominatim for
+                            precise street-level resolution.
   B:   Fuzzy match        — handles typos / transliteration variants
   C:   Landmark pattern   — "near X bridge", "X bridge ළඟ"
   D:   Hierarchical parse — splits "Kelaniya, Gonawala, Yakkala Road ළඟ"
-  E:   Nominatim API      — street-level, cached in DB or local dict
+  E:   Google Maps API    — street-level, full formatted address, Sinhala/Tamil
+                            aware. Set GOOGLE_MAPS_API_KEY to enable.
+  E.5: Nominatim fallback — OpenStreetMap geocoding when no Google key is set.
+                            Rate-limited 1 req/sec, cached locally.
   F:   Unresolved         — geo_score = 0, flagged for operator review
 
 Data sources:
   - 31 town/city entries (original hand-curated, backward-compatible)
   - 4,258 GN Division centroids extracted from lka_admin4.geojson
-  - Live Nominatim geocoding (cached, rate-limited 1 req/sec)
+  - Google Maps Geocoding API (GOOGLE_MAPS_API_KEY env var, recommended)
+  - OpenStreetMap Nominatim (free fallback, no key needed)
 
 Coverage target: >97% of reports resolve to lat/lng.
 """
 
 import json
+import os
 import re
 import time
 from pathlib import Path
@@ -326,62 +330,224 @@ def hierarchical_resolve(text: str) -> Optional[dict]:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# STAGE E: NOMINATIM API FALLBACK  (NEW)
+# SHARED GEOCODING CACHE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-_NOM_CACHE: dict = {}
-_NOM_LAST_REQUEST: float = 0.0
-_NOM_CACHE_PATH = Path(__file__).parent.parent / "data" / "nominatim_cache.json"
-_NOM_ENABLED = True
+_GEO_CACHE: dict = {}
+_GEO_CACHE_PATH = Path(__file__).parent.parent / "data" / "geocoding_cache.json"
 
 
-def _load_nominatim_cache():
-    """Load persistent Nominatim cache from disk."""
-    if _NOM_CACHE_PATH.exists():
-        try:
-            with open(_NOM_CACHE_PATH, encoding="utf-8") as f:
-                cached = json.load(f)
-            _NOM_CACHE.update(cached)
-        except Exception:
-            pass
+def _load_geocoding_cache():
+    """Load unified geocoding cache (Google Maps + Nominatim results) from disk."""
+    # Also load old nominatim_cache.json for backward compatibility
+    for old_path in [
+        _GEO_CACHE_PATH,
+        Path(__file__).parent.parent / "data" / "nominatim_cache.json",
+    ]:
+        if old_path.exists():
+            try:
+                with open(old_path, encoding="utf-8") as f:
+                    cached = json.load(f)
+                _GEO_CACHE.update(cached)
+            except Exception:
+                pass
 
 
-def _save_nominatim_cache():
-    """Persist Nominatim cache to disk."""
+def _save_geocoding_cache():
+    """Persist unified geocoding cache to disk."""
     try:
-        _NOM_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(_NOM_CACHE_PATH, "w", encoding="utf-8") as f:
-            json.dump(_NOM_CACHE, f, ensure_ascii=False, indent=1)
+        _GEO_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(_GEO_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(_GEO_CACHE, f, ensure_ascii=False, indent=1)
     except Exception:
         pass
 
 
-def nominatim_resolve(text: str, db=None) -> Optional[dict]:
-    """
-    Query OpenStreetMap Nominatim for street-level resolution.
-    Rate-limited to 1 req/sec per ToS.  Results cached in memory + disk.
+# ═══════════════════════════════════════════════════════════════════════════════
+# STAGE E: GOOGLE MAPS GEOCODING API  (primary — set GOOGLE_MAPS_API_KEY)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Why Google Maps over Nominatim:
+#   • Returns the EXACT address, not just a place-name centroid
+#   • Full formatted address:  "No 45/B, Kandy Road, Kelaniya, Western Province, Sri Lanka"
+#   • Street-level lat/lng (precision ~10 m vs ~500 m for town centroid)
+#   • Native Sinhala + Tamil Unicode understanding
+#   • Structured address components: street, locality, district, province separately
+#   • Much higher accuracy for rural/suburban Sri Lanka than OpenStreetMap
+#
+# Set GOOGLE_MAPS_API_KEY environment variable to enable.
+# Free tier: 40,000 requests/month.  For 800 reports, cost = $0.
+# ═══════════════════════════════════════════════════════════════════════════════
 
-    If a database object is passed (pipeline.database.Database), uses the
-    nominatim_cache table instead of the JSON file.
+_GMAPS_API_KEY: Optional[str] = os.environ.get("GOOGLE_MAPS_API_KEY")
+_GMAPS_BASE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
+
+
+def _parse_gmaps_components(components: list) -> dict:
     """
-    global _NOM_LAST_REQUEST
-    if not _NOM_ENABLED or not text or not text.strip():
+    Extract district and province from Google Maps address_components list.
+    Google returns typed components — we pick the right administrative levels.
+
+    Sri Lanka structure:
+      administrative_area_level_1 → Province  (e.g. "Western Province")
+      administrative_area_level_2 → District  (e.g. "Colombo District")
+      locality / sublocality      → Town/City (e.g. "Kelaniya")
+    """
+    mapping = {}
+    for comp in components:
+        types = comp.get("types", [])
+        name = comp.get("long_name", "")
+        if "administrative_area_level_1" in types:
+            mapping["province"] = name.replace(" Province", "").strip()
+        elif "administrative_area_level_2" in types:
+            mapping["district"] = name.replace(" District", "").strip()
+        elif "locality" in types and "locality" not in mapping:
+            mapping["locality"] = name
+        elif "sublocality_level_1" in types and "locality" not in mapping:
+            mapping["locality"] = name
+        elif "route" in types:
+            mapping["route"] = name
+        elif "street_number" in types:
+            mapping["street_number"] = name
+    return mapping
+
+
+def google_maps_resolve(text: str, db=None) -> Optional[dict]:
+    """
+    Geocode using Google Maps Geocoding API.
+
+    Returns a result dict with:
+      - Precise street-level lat/lng
+      - Full formatted address from Google
+      - Structured district + province
+      - Confidence score = 95 (higher than Nominatim's 85)
+
+    Results are cached in data/geocoding_cache.json so each unique
+    location string is only looked up once.
+
+    Requires GOOGLE_MAPS_API_KEY environment variable.
+    Falls back silently if key is not set or request fails.
+    """
+    if not _GMAPS_API_KEY:
+        return None
+    if not text or not text.strip():
         return None
 
-    key = text.lower().strip()
+    cache_key = f"gmaps:{text.lower().strip()}"
 
-    # Check DB cache first
+    # Check DB cache
     if db is not None:
         try:
-            cached = db.get_nominatim_cache(key)
+            cached = db.get_nominatim_cache(cache_key)
             if cached:
                 return cached
         except Exception:
             pass
 
     # Check memory/disk cache
-    if key in _NOM_CACHE:
-        return _NOM_CACHE[key]
+    if cache_key in _GEO_CACHE:
+        return _GEO_CACHE[cache_key]
+
+    try:
+        import requests
+        params = {
+            "address": f"{text}, Sri Lanka",
+            "key": _GMAPS_API_KEY,
+            "region": "lk",          # bias results toward Sri Lanka
+            "language": "en",         # return address in English for consistency
+            "components": "country:LK",
+        }
+        resp = requests.get(_GMAPS_BASE_URL, params=params, timeout=5)
+        data = resp.json()
+
+        if data.get("status") != "OK" or not data.get("results"):
+            _GEO_CACHE[cache_key] = None
+            _save_geocoding_cache()
+            return None
+
+        top = data["results"][0]
+        loc = top["geometry"]["location"]
+        components = _parse_gmaps_components(top.get("address_components", []))
+        formatted = top.get("formatted_address", text)
+
+        # Precision score: ROOFTOP > RANGE_INTERPOLATED > GEOMETRIC_CENTER > APPROXIMATE
+        precision_scores = {
+            "ROOFTOP": 97,
+            "RANGE_INTERPOLATED": 93,
+            "GEOMETRIC_CENTER": 88,
+            "APPROXIMATE": 80,
+        }
+        location_type = top.get("geometry", {}).get("location_type", "APPROXIMATE")
+        score = precision_scores.get(location_type, 85)
+
+        result = _make_result(
+            canonical_name=formatted,
+            entry={
+                "lat": loc["lat"],
+                "lng": loc["lng"],
+                "district": components.get("district", ""),
+                "province": components.get("province", ""),
+            },
+            method="google_maps",
+            score=score,
+            flag="google_maps_location",
+            formatted_address=formatted,
+            location_type=location_type,
+            locality=components.get("locality", ""),
+            route=components.get("route", ""),
+        )
+
+        _GEO_CACHE[cache_key] = result
+        _save_geocoding_cache()
+
+        if db is not None:
+            try:
+                db.set_nominatim_cache(cache_key, result)
+            except Exception:
+                pass
+
+        return result
+
+    except ImportError:
+        pass
+    except Exception:
+        pass
+
+    _GEO_CACHE[cache_key] = None
+    return None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STAGE E.5: NOMINATIM FALLBACK  (used when no Google Maps API key is set)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_NOM_LAST_REQUEST: float = 0.0
+_NOM_ENABLED = True
+
+
+def nominatim_resolve(text: str, db=None) -> Optional[dict]:
+    """
+    Query OpenStreetMap Nominatim for street-level resolution.
+    Rate-limited to 1 req/sec per ToS.  Results cached in memory + disk.
+    Used as fallback when GOOGLE_MAPS_API_KEY is not set.
+    """
+    global _NOM_LAST_REQUEST
+    if not _NOM_ENABLED or not text or not text.strip():
+        return None
+
+    cache_key = f"nom:{text.lower().strip()}"
+
+    # Check DB cache first
+    if db is not None:
+        try:
+            cached = db.get_nominatim_cache(cache_key)
+            if cached:
+                return cached
+        except Exception:
+            pass
+
+    if cache_key in _GEO_CACHE:
+        return _GEO_CACHE[cache_key]
 
     # Rate limit: 1 request per second
     now = time.time()
@@ -406,31 +572,29 @@ def nominatim_resolve(text: str, db=None) -> Optional[dict]:
 
         if data:
             result = _make_result(
-                canonical_name=data[0].get("display_name", text)[:60],
+                canonical_name=data[0].get("display_name", text)[:80],
                 entry={"lat": float(data[0]["lat"]), "lng": float(data[0]["lon"]),
                        "district": data[0].get("address", {}).get("county", ""),
                        "province": data[0].get("address", {}).get("state", "")},
                 method="nominatim", score=85,
                 flag="nominatim_location",
             )
-            _NOM_CACHE[key] = result
-            _save_nominatim_cache()
+            _GEO_CACHE[cache_key] = result
+            _save_geocoding_cache()
 
-            # Also cache in DB
             if db is not None:
                 try:
-                    db.set_nominatim_cache(key, result)
+                    db.set_nominatim_cache(cache_key, result)
                 except Exception:
                     pass
 
             return result
     except ImportError:
-        pass  # requests not installed
+        pass
     except Exception:
-        pass  # network error, timeout, etc.
+        pass
 
-    # Cache negative result to avoid repeated API calls
-    _NOM_CACHE[key] = None
+    _GEO_CACHE[cache_key] = None
     return None
 
 
@@ -523,11 +687,12 @@ def resolve_location(text: str, use_nominatim: bool = False, db=None) -> dict:
     """
     Resolution chain:
       A:   Exact match
-      A.5: Address fast-path (house/street addresses → Nominatim directly)
+      A.5: Address fast-path (house/street → Google Maps or Nominatim directly)
       B:   Fuzzy match
       C:   Landmark pattern
       D:   Hierarchical parse
-      E:   Nominatim API (opt-in for all other strings)
+      E:   Google Maps Geocoding API  (if GOOGLE_MAPS_API_KEY is set)
+      E.5: Nominatim fallback         (if no Google key, or Google failed)
       F:   Unresolved
     """
     if not text or not text.strip():
@@ -541,13 +706,13 @@ def resolve_location(text: str, use_nominatim: bool = False, db=None) -> dict:
 
     # Stage A.5: Address fast-path
     # Strings like "No 45/B, Kandy Road, Kelaniya" will never match fuzzy or
-    # landmark stages — route them straight to Nominatim for street-level accuracy.
-    # Always attempted for address patterns (cached, so no slowdown after first run).
+    # landmark stages. Route them to Google Maps (or Nominatim) for precise
+    # street-level resolution. Results are cached — no slowdown after first run.
     if _is_address_string(text):
-        nom = nominatim_resolve(text, db=db)
-        if nom:
-            return nom
-        # Nominatim offline/failed — extract city portion and resolve that
+        geo = google_maps_resolve(text, db=db) or nominatim_resolve(text, db=db)
+        if geo:
+            return geo
+        # Both APIs offline/failed — extract city portion and resolve that
         city = _extract_city_from_address(text)
         if city:
             ex2 = lookup_exact(city)
@@ -587,8 +752,14 @@ def resolve_location(text: str, use_nominatim: bool = False, db=None) -> dict:
         if hp:
             return hp
 
-    # Stage E: Nominatim fallback (opt-in for all other strings)
-    if use_nominatim:
+    # Stage E: Google Maps (for place names that passed all local stages)
+    if _GMAPS_API_KEY:
+        geo = google_maps_resolve(text, db=db)
+        if geo:
+            return geo
+
+    # Stage E.5: Nominatim fallback (opt-in, used when no Google key or Google failed)
+    if use_nominatim or not _GMAPS_API_KEY:
         nom = nominatim_resolve(text, db=db)
         if nom:
             return nom
@@ -620,9 +791,10 @@ def resolve_batch(reports: list, use_nominatim: bool = False, db=None) -> list:
 
 # Build index on import
 _gn_count = _build_index()
-_load_nominatim_cache()
+_load_geocoding_cache()
 
+_geo_source = "Google Maps" if _GMAPS_API_KEY else "Nominatim (OSM)"
 if _gn_count > 0:
-    print(f"  [Gazetteer] {len(GAZETTEER)} entries ({31} towns + {_gn_count} GN variants)")
+    print(f"  [Gazetteer] {len(GAZETTEER)} entries ({31} towns + {_gn_count} GN variants) | geocoder: {_geo_source}")
 else:
-    print(f"  [Gazetteer] {len(GAZETTEER)} town entries (run gn_extractor for GN divisions)")
+    print(f"  [Gazetteer] {len(GAZETTEER)} town entries (run gn_extractor for GN divisions) | geocoder: {_geo_source}")
