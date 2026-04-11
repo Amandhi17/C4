@@ -466,6 +466,373 @@ TAMIL_LOCATIONS = {
 }
 
 # ============================================================
+# ROMANIZED TAMIL LOCATIONS — Tamil place names in Latin script
+# Very common in text messages from young Tamil speakers in SL
+# ============================================================
+ROMANIZED_TAMIL_LOCATIONS = {
+    # Western Province
+    "Kelaniya":       ["Kelaniya", "Kelani"],
+    "Kaduwela":       ["Kaduvela", "Kaduwela"],
+    "Kolonnawa":      ["Kolonnawa", "Kolonnawa area"],
+    "Wellampitiya":   ["Wellampitiya", "Wellampitiyaa"],
+    "Negombo":        ["Neerkozhumbu", "Negombo"],
+    "Kalutara":       ["Kaluthurai", "Kalutara"],
+    "Panadura":       ["Paananturai", "Panadura"],
+    "Wattala":        ["Vatthalai", "Wattala"],
+    "Battaramulla":   ["Battaramulla", "Battaramulle"],
+    "Ja-Ela":         ["Saa-Eelam", "Ja-Ela"],
+    "Horana":         ["Horanai", "Horana"],
+    "Beruwala":       ["Peruwala", "Beruwala"],
+    "Bandaragama":    ["Pantaaragama", "Bandaragama"],
+    # Central Province
+    "Kandy_City":     ["Kanndi", "Maahanuvara"],
+    "Peradeniya":     ["Peraatheniyaa", "Peradeniya"],
+    "Katugastota":    ["Katukasthottai", "Katugastota"],
+    "Gampola":        ["Kampoolaa", "Gampola"],
+    "Ratnapura_City": ["Iraththinapuri", "Ratnapura"],
+    "Kuruwita":       ["Kuruvitai", "Kuruwita"],
+    "Eheliyagoda":    ["Eheliyagoda", "Eheliyakooda"],
+}
+
+# ============================================================
+# ROMANIZED TAMIL PHRASES — Tamil written in Latin script
+# Very common in Sri Lankan Tamil SMS and informal communication
+# ============================================================
+ROMANIZED_TAMIL_FLOOD = {
+    "water_level": [
+        "veedu varaikkum thanneer vandhuchu",
+        "vellam kaluthuvare vandhuchu engal veedu",
+        "keezh maadi ellaam thanneerla moozhkiduchu",
+        "thanneer maarvaa varaikkum irukku veetukkulle",
+        "peria vellam vandhuchu thanneer naala naala erudhu",
+        "iduppu varaikkum thanneer vandhuchu tholaikala mudiyala",
+        "veettu koorai varaikkum thanneer erungudhu",
+    ],
+    "help_needed": [
+        "udavi thevai ungalukku kaathaama irunga please",
+        "engaloda tholaikala mudiyala vellathula",
+        "kaapaatranum ingae makkal irukaanga",
+        "paadagu anupungal please engalai kaapaatrungal",
+        "pillaigal irukaanga siriya pillaigal kaapaatrungal",
+        "avasara udavi thevai ungalukku unarka veendum",
+        "naanga vazhikku pooga mudiyala please varungal",
+    ],
+    "situation": [
+        "veettu koorai mela irukkoam naanga",
+        "veedukal moozhkipochu ellaam",
+        "vazhiya thanneerla moozhkiduchu",
+        "meensaaraangu thundikappattuchu",
+        "palathoda mela thanneer oadugiradhu",
+        "poova keezhae kochi maram vizhunthuchu vellathula",
+    ],
+}
+
+ROMANIZED_TAMIL_FIRE = {
+    "fire_status": [
+        "veedu eriyudhu peria thee pidichirukkum",
+        "thee pidichirukku kattuppaduthala mudiyala",
+        "periya thee parariyudhu asamuthu veedukalukku",
+        "veettu muzhuvathum thee paravuduchu",
+        "puthiru migavum adhigama irukku swaasikka mudiyala",
+        "gas likkaa thee moooti erinduchu",
+        "mudhal maadi muzhuvathum eriyudhu",
+    ],
+    "help_needed": [
+        "thee aanaikka vaandam anupungal uadanae",
+        "makkal ullae maattikirukkaanga kaapaatrungal",
+        "pillaikku thee pidichirukku vegam varungal",
+        "aasai udanae thee aanaikka team varanum",
+        "vegama varungal veedukal eriyudhu",
+        "thanneer illai thee aanaikka please help",
+    ],
+    "situation": [
+        "mudhal maadi thee pidichirukku",
+        "mooonu veedukalula thee paravuduchu",
+        "kattidaththai muzhuvathum thee pidichuduchu",
+        "puthiru karanamaaga swaasikka kastama irukku",
+        "aaandavane thee vera veedukullavum pararindhu",
+        "viduthalaip paathai thee paravuthal thadukkappadavilla",
+    ],
+}
+
+ROMANIZED_TAMIL_THIRD_PARTY = [
+    "en nanban veedu thanneerla moozhkiduchu",
+    "en atthai veedu thee pidichirukku uadanae varungal",
+    "en thambi kudumbam maattikirukkaanga vellathula",
+    "en akka veedu adutha vella vandhuchu",
+    "en nanban sonna udavi venum nu",
+    "engal uruvinar aasaiyaana nila irukkaanga",
+]
+
+# ============================================================
+# LANDSLIDE PHRASES — Sinhala, Romanized Sinhala, Tamil, Romanized Tamil
+# Key for Sri Lanka: Badulla, Kegalle, Ratnapura, Uva Province
+# ============================================================
+LANDSLIDE_PHRASES = {
+    "slide_status": [
+        "නායයාමක් සිදු වෙලා",
+        "ගල් කඩාවැටිලා",
+        "මඩ ගලා ආවා",
+        "කන්ද කඩාවැටිලා ගෙවල් යටවෙලා",
+        "දිය රළු ගලා ආවා",
+        "නායයෑමෙන් පාර අවහිර වෙලා",
+        "ගස් සහ ගල් ගෙවල් මතට ඇදිලා",
+        "කුඹුරු නායයෑමෙන් යටවෙලා",
+        "ගෙවල් ගල් ගසා ඇදිලා",
+        "නායයෑමෙන් ගෙවල් කිහිපයක් සම්පූර්ණයෙන් ඇදිලා",
+    ],
+    "help_needed": [
+        "ගෙවල් යට මිනිස්සු ඉන්නවා",
+        "යට වූ ගෙවල් වලින් මිනිස්සු ගොඩ ගන්න ඕනෙ",
+        "ගල් ගසා ගෙදරට ඇදිලා ළමයි ඇතුලේ",
+        "ජීවිත අනතුරෙ ඉන්නෙ කරුණාකර ඉක්මනට",
+        "රෙස්කිව් ටීම් ඕනෙ ඉක්මනට",
+        "යට වූ ගෙවල් ළඟ උදව් ඕනෙ",
+        "ගල් ගසා ඇදිලා ගෙදර, ගොඩ ගන්නෙ කොහොමද",
+    ],
+    "situation": [
+        "පාර සම්පූර්ණයෙන් ඇහිරිලා",
+        "ගම්මානය ළඟ කන්ද නායයෑමෙ",
+        "අඩි ගාණකට ගල් සහ මඩ",
+        "ගෙවල් ගාණකට හානි",
+        "ගිනි නිවීමේ රථ ගන්න බැහැ, පාර ඇහිරිලා",
+        "ගොඩ ගොඩ ගල් ගස්දාලා ගෙවල් පිලිසිඳ",
+        "ගම ගාණකට ගිය, ජනතාව ඉවත් කරනවා",
+    ],
+}
+
+ROMANIZED_LANDSLIDE = {
+    "slide_status": [
+        "naayayaamak sidu wela", "gal kadawatila", "mada gala aawa",
+        "kanda kadawatila gewal yatawela", "diya ralu gala aawa",
+        "naayayeemata maargas awahira wela", "gas saha gal gewal mathata aedila",
+        "gewal gal gasa aedila", "naayayeemen gewal kipaak aedila",
+    ],
+    "help_needed": [
+        "gewal yata minissu innawa", "yata wu gewal walin minissu goda ganna one",
+        "gal gasa gedarat aedila lamayi aethule", "jiwithe anathurae innae karunakara ikmanata",
+        "rescue team one ikmanata", "yata wu gewal langa udaw one",
+    ],
+    "situation": [
+        "paara sampurnayen aehirila", "gammana langa kanda naayayeeme",
+        "adi ganakata gal saha mada", "gewal gananakata haani",
+        "paara aehirila gini niwaa rath yanna baha",
+    ],
+}
+
+TAMIL_LANDSLIDE = {
+    "slide_status": [
+        "நிலச்சரிவு ஏற்பட்டுவிட்டது",
+        "பாறைகள் இடிந்து விழுந்துவிட்டன",
+        "சேறு வந்து வீடுகளை மூழ்கடித்தது",
+        "மலை இடிந்து வீடுகள் மணலில் புதைந்தன",
+        "சாலை நிலச்சரிவால் அடைபட்டுவிட்டது",
+        "மரங்களும் பாறைகளும் வீடுகளின் மீது விழுந்தன",
+        "வீடுகள் சேற்றில் மூழ்கிவிட்டன",
+    ],
+    "help_needed": [
+        "வீட்டின் அடியில் மக்கள் சிக்கியுள்ளனர்",
+        "புதைந்த வீடுகளிலிருந்து மக்களை மீட்க வேண்டும்",
+        "பாறை விழுந்த வீட்டில் குழந்தைகள் உள்ளனர்",
+        "உடனடி மீட்பு தேவை தயவுசெய்து வாருங்கள்",
+        "மீட்பு குழு அனுப்புங்கள் விரைவாக",
+    ],
+    "situation": [
+        "சாலை முழுவதும் அடைபட்டுவிட்டது",
+        "கிராமத்தின் அருகில் மலை இடிந்தது",
+        "அடிமேல் அடியாக சேறும் பாறையும்",
+        "பல வீடுகளுக்கு சேதம் ஏற்பட்டுள்ளது",
+        "மீட்பு வாகனங்கள் செல்ல முடியவில்லை",
+    ],
+}
+
+ROMANIZED_TAMIL_LANDSLIDE = {
+    "slide_status": [
+        "nilacharivaa vandhuchu", "paraikkal idinju vizhuduchu",
+        "seeru vandhu veedukalai moozhkiduchu", "malai idinju veedukal manatthil puthaindhachu",
+        "saalai nilacharivaal adaippattuduchu", "marathum paraikkalum veedukal mela vizhuduchu",
+    ],
+    "help_needed": [
+        "veettu adiyil makkal sikkiirukkaanga", "puthainda veedukalin makkalai meetta veendum",
+        "paraikkal vizhntha veetula pillaigal irukaanga", "uadanae meeppu thevai please varungal",
+        "meeppu kuzhu anupungal vegama",
+    ],
+    "situation": [
+        "saalai muzhuvathum adaipaattuduchu", "kiraamaththa arugilae malai ididuchu",
+        "seeru paraikal adimeel adiyaaka", "pala veedukalukku sedam vandhuchu",
+        "meeppu vaandam sella mudiyala paathaikku",
+    ],
+}
+
+MINIMAL_LANDSLIDE = [
+    "නායයාම", "ගල් ඇදිලා", "කන්ද ඇදිලා", "ගෙවල් යටවෙලා", "උදව්", "හදිසි",
+    "naayayaama", "gal aedila", "kanda aedila", "udaw", "rescue",
+    "நிலச்சரிவு", "உதவி", "மலை இடிந்தது",
+    "nilacharivaa", "udavi", "help SOS",
+]
+
+# ============================================================
+# VICTIM PANIC MESSAGES — raw 1-5 word cries for help
+# The victim is too panicked / has no time to give details.
+# Often just a location + disaster word, or just "help".
+# These are the HARDEST cases for the system: no context,
+# minimal signal — the operator must infer everything.
+#
+# Sinhala, Romanized Sinhala, Tamil, Romanized Tamil variants
+# covering every location in Western + Central provinces.
+# ============================================================
+
+def _make_panic_messages(loc_key, loc_data, incident_type):
+    """
+    Generate realistic panic message variants for a given location.
+    Returns a pool of short panic strings across all 4 languages.
+    """
+    # Location name tokens per language
+    si_names  = loc_data.get("sinhala", [loc_key])
+    ro_names  = loc_data.get("romanized", [loc_key])
+    ta_names  = TAMIL_LOCATIONS.get(loc_key, [loc_key.replace("_City","").replace("_Town","")])
+    rt_names  = ROMANIZED_TAMIL_LOCATIONS.get(loc_key, [loc_key.replace("_City","").replace("_Town","")])
+
+    si  = random.choice(si_names)
+    ro  = random.choice(ro_names)
+    ta  = random.choice(ta_names)
+    rt  = random.choice(rt_names)
+
+    if incident_type == "flood":
+        si_disaster  = random.choice(["ගංවතුර", "ජලය", "ගිලෙනවා", "වතුර"])
+        ro_disaster  = random.choice(["gangwatura", "watura", "flood", "jalaya"])
+        ta_disaster  = random.choice(["வெள்ளம்", "தண்ணீர்", "வெள்ளப்பெருக்கு"])
+        rt_disaster  = random.choice(["vellam", "thanneer", "flood"])
+    elif incident_type == "fire":
+        si_disaster  = random.choice(["ගිනි", "ගින්නෙ", "ගිනිගෙන"])
+        ro_disaster  = random.choice(["gini", "ginnk", "fire"])
+        ta_disaster  = random.choice(["தீ", "நெருப்பு", "தீவிபத்து"])
+        rt_disaster  = random.choice(["thee", "nerruppu", "fire"])
+    else:  # landslide
+        si_disaster  = random.choice(["නායයාම", "ගල්", "කන්ද ඇදිලා"])
+        ro_disaster  = random.choice(["naayayaama", "gal aedila", "landslide"])
+        ta_disaster  = random.choice(["நிலச்சரிவு", "மலை இடிந்தது"])
+        rt_disaster  = random.choice(["nilacharivaa", "malai idinju", "landslide"])
+
+    pool = [
+        # just "help" / "SOS" — no location at all
+        "help", "SOS", "help!", "help me", "please help",
+        "උදව්", "හදිසි", "බේරගන්න", "ගොඩ ගන්න",
+        "udaw", "hadisi", "beraganna",
+        "உதவி", "காப்பாற்றுங்கள்", "வாருங்கள்",
+        "udavi", "kaapaatrungal", "varungal",
+        # "help [location]"
+        f"help {ro}",
+        f"help! {ro}",
+        f"help {ro} please",
+        f"udaw {ro}",
+        f"udaw {si}",
+        f"udavi {rt}",
+        f"udavi {ta}",
+        f"உதவி {ta}",
+        f"உதவி தேவை {ta}",
+        # "[disaster] [location]"
+        f"{si_disaster} {si}",
+        f"{si_disaster}! {si}",
+        f"{ro_disaster} {ro}",
+        f"{ro_disaster}! {ro}",
+        f"{ta_disaster} {ta}",
+        f"{ta_disaster}! {ta}",
+        f"{rt_disaster} {rt}",
+        f"{rt_disaster}! {rt}",
+        # "[location] [disaster]"
+        f"{ro} {ro_disaster}",
+        f"{si} {si_disaster}",
+        f"{ta} {ta_disaster}",
+        f"{rt} {rt_disaster}",
+        # "[location] help"
+        f"{ro} help",
+        f"{si} උදව්",
+        f"{ta} உதவி",
+        f"{rt} udavi",
+        # ultra short location-only (caller can barely speak)
+        f"{ro}!!",
+        f"{si}!!",
+    ]
+    return pool
+
+# ============================================================
+# FULL CONVERSATION TEMPLATES — simulates actual voice call transcripts
+# Stored in report["transcript"] for voice calls.
+# Much richer than individual key_phrases.
+# ============================================================
+VOICE_CONVERSATIONS_FLOOD = {
+    "sinhala": [
+        "සාර් මමු කැළණිය ළඟ ඉන්නේ. ගෙදරට ගොඩක් වතුර ආවා. පපුව තරම් ජලය ඇතුලේ. අපිට ළමයි හතර දෙනෙකුත් ඉන්නවා. ගෙදරින් එළියට යන්න බැහැ. ඉක්මනින් බෝට්ටුවක් ගෙනියන්න කරුණාකර.",
+        "අයියෝ උදව් කරන්න. හංවැල්ල ළඟ ගෙදර වතුරෙ. ගෙදරේ ඉඩ මහල සම්පූර්ණ ගිලිලා. ළමයි දෙන්නෙකුයි ආච්චිත් ඉන්නෙ. ආච්චිට් ඇවිද්ද ගන්න බැහැ. ඉක්මනට ගෙනිය ගන්නනෝ.",
+        "කොළොන්නාවේ ඉන්නෙ මමු. ඇළ පිටාරිලා ගෙදරට ජලය ආවා. ඉණ මට්ටමට ජලය. මිනිස්සු ගාණ ගොඩයි ගෙදර. කෑම් නැහැ. ඉස්කෝල් ළමයිත් ඉන්නෙ. ජලය ඉක්මනට යන්නේ නැහැ. ආධාර ඕනේ.",
+        "ජා-ඇල ළඟ ගංවතුරෙ. ජලය පපුව ඉහළට ඇවිත්. ගෙවල් ගාණකට වතුර ඇවිත්. අම්මා රෝගිනිය ගෙදරේ ඉන්නේ. ගෙනිය ගන්නනෝ. ගිනි නිවීම් ආධාර නැහැ. ජලය ඉහළ යනවා.",
+    ],
+    "romanized": [
+        "sir api Kelaniya langa innawa. gedara watura wadi aawa. papuwa thrama jalaya aethule. lamayi hathara denekuth innawa. gedaren eliyata yanna baha. ikmanata boat ekak ewaanna.",
+        "ayyo udaw karanna. Hanwella langa ge watrn. bim mahala sampurnayenma gilila. lamayi dennakyui aachchi innawa. ikmanata geniya gannno.",
+        "Kolonnawa watura awa ela pitaarila. ina mattamata. minissu godai gedara. kama naha. jalaya ikmanata yenne naha. adhar oene karunakara.",
+        "Ja-Ela gangwatura. jalaya papuwa ihalata. gewal gaankata watura. amma roginiyin gedara. geniya gannno please. jalaya ihala yanawa.",
+    ],
+    "tamil": [
+        "ஐயா நான் கல்முனையில் இருக்கிறேன். எங்கள் வீட்டிற்கு தண்ணீர் வந்துவிட்டது. மார்பு அளவிற்கு தண்ணீர் இருக்கிறது. என் குடும்பத்தில் ஆறு பேர் இருக்கிறோம். வயதான பெற்றோரும் சிறு குழந்தைகளும் உள்ளனர். தயவுசெய்து படகு அனுப்புங்கள் மிகவும் அவசரம்.",
+        "ஐயா திருகோணமலையில் வெள்ளம் வந்துவிட்டது. தண்ணீர் கழுத்து வரை உயர்ந்துவிட்டது. வீட்டில் நாங்கள் ஐந்து பேர் இருக்கிறோம். குழந்தைகள் கூரையில் ஏறியிருக்கிறோம். உடனடியாக உதவி அனுப்புங்கள்.",
+        "சார் மட்டக்களப்பில் இருந்து பேசுகிறேன். ஆற்று வெள்ளம் வீட்டுக்கு வந்துவிட்டது. இடுப்பு அளவு தண்ணீர். வீட்டில் முதியோர் இருக்கிறார்கள் நகர முடியவில்லை. தயவுசெய்து படகு அனுப்புங்கள்.",
+    ],
+    "romanized_tamil": [
+        "aiyaa naan Kalmunai irukkaen. engal veetukku thanneer vandhuchu. maarvaa varaikkum thanneer irukku. engal kudumbathula aaru pear irukkoam. vayatha pettorum siru pillaikalum irukaanga. padagu anupungal please mikavum avasaram.",
+        "aiyaa Trinco vellam vandhuchu. thanneer kaluthu varaikkum eruduchu. veetula naanga ainthu pear. pillaigal koorai mela erindhoam. uadanae udavi anupungal.",
+        "sir Batticaloa irundhu pesuginaen. aatruvellam veetukku vandhuchu. iduppu alavu thanneer. veetula muthiyoor irukaanga naga mudiyala. padagu anupungal please.",
+    ],
+}
+
+VOICE_CONVERSATIONS_FIRE = {
+    "sinhala": [
+        "ගිනිය ගිනිය! කොළොන්නාවේ ගෙදරකට ගිනි ගෙනලා. ළමයි දෙන්නෙකුයි ඇතුලේ. ගිනි නිවීමේ රථය ඉක්මනට ගෙනත් ටිකේ ගිනි පැතිරෙනවා.",
+        "සාර් දෙමටගොඩ ළඟ ගිනිණක්. ගේ සම්පූර්ණ ගිනිගෙනලා. කීප ගෙයක් ඇවිළෙලා. ළමා ශාලාවත් ළඟ ඉන්නෙ. ඉස්කෝලේ ළමයිත් ළඟ ඉන්නෙ. කරුණාකර ඉක්මනට.",
+        "බත්තරමුල්ල ළඟ ගෑස් ලීකිං. ගිනිගෙනලා ගෙදර. ගෙදර ඇතුලේ අය ගොඩ ගන්නෙ කොහොමද. ගිනිකෙළිය ලොකු ගලා. ඉවත් යන්නේ කොහෙද.",
+    ],
+    "romanized": [
+        "giniyi giniyi! Kolonnawa gedarak gini ganala. lamayi dennakyui aethule. gini niwima rathaya ikmanata genenna tikae gini paethirenawa.",
+        "sir Dematagoda langa ginnk. ge sampurna ginigena. kipa geyyak aweelela. lamaasala langa innae. ikmanata karunakara.",
+        "Battaramulla gas leeking. ginigena gedara. aethulae ay goda gannae kohomada. ginikalaya loku. iwaath yanna koheda.",
+    ],
+    "tamil": [
+        "ஐயா கொலொன்னாவில் வீட்டில் தீ பிடித்துவிட்டது. குழந்தைகள் உள்ளே சிக்கிக்கொண்டுள்ளனர். தீயணைப்பு வாகனம் உடனே அனுப்புங்கள் தீ பரவுகிறது.",
+        "சார் மட்டக்குளியில் பெரிய தீ விபத்து. மூன்று வீடுகளில் தீ பரவிவிட்டது. மக்கள் வெளியே வர முடியவில்லை. உடனடியாக வாருங்கள்.",
+        "திருகோணமலையில் கேஸ் கசிந்து தீ பிடித்துவிட்டது. வீட்டில் உள்ளவர்களை எப்படி காப்பாற்றுவது. தீ மிகவும் பெரிதாக உள்ளது.",
+    ],
+    "romanized_tamil": [
+        "aiyaa Kolonnawala veetula thee pidichirukku. pillaigal ullae maattikirukkaanga. theeanaikkappu vaandam uadanae anupungal thee parariyudhu.",
+        "sir Mattakkuliyala peria thee vipaththu. moonu veedukalula thee paravuduchu. makkal veliyae vara mudiyala. uadanae varungal.",
+        "Trinco gaas kassinthu thee pidichirukku. veetula irupavar eppadi kaapaatruvadhu. thee migavum perithaka irukku.",
+    ],
+}
+
+VOICE_CONVERSATIONS_LANDSLIDE = {
+    "sinhala": [
+        "අයියෝ සාර් නායයාමයි. බදුල්ල ළඟ කන්ද ඇදිලා. ගෙවල් ගාණකට ගිලිලා. ගෙවල් ඇතුලේ මිනිස්සු ඉන්නවා. ගොඩ ගන්නෙ කොහොමද. රෙස්කිව් ටීම් ගෙනත් ඉක්මනට.",
+        "බණ්ඩාරවෙල ළඟ ගල් කඩාවැටිලා. මහ ගලකි ගෙදර මතට ඇදිලා. ළමයි ගෙදර ඇතුලේ. ජීවිත අනතුරේ. ඉක්මනින් රෙස්කිව් ආයේ.",
+        "කන්දේ ඇඩිලා ගමේ. නාායෑමෙ ගෙවල් හය හතක් ගිලිලා. ගෙවල් ඇතුලේ ඇතුලේ හිරවෙලා. ගොඩ ගන්නනෝ ඉක්මනට.",
+    ],
+    "romanized": [
+        "ayyo sir naayayaamyi. Badulla langa kanda aedila. gewal gaankata gilila. aethule minissu innawa. goda gannae kohomada. rescue team genenna ikmanata.",
+        "Bandarawela langa gal kadawatila. maha galaki gedara matata aedila. lamayi gedara aethule. jiwithe anathurae. rescue aawa ikmanin.",
+        "kande aedila game. naayayeme gewal haya hatak gilila. aethulae hirawela. goda gannno ikmanata.",
+    ],
+    "tamil": [
+        "ஐயா நிலச்சரிவு பதுளையில். மலை இடிந்து வீடுகள் மீது விழுந்தது. வீடுகளுக்குள் மக்கள் சிக்கியுள்ளனர். மீட்புக்குழு அனுப்புங்கள் உடனே.",
+        "பண்டாரவளை அருகில் பாறைகள் இடிந்து விழுந்தன. பெரிய பாறை வீட்டின் மீது விழுந்தது. குழந்தைகள் உள்ளே சிக்கியுள்ளனர். உடனே வாருங்கள்.",
+        "கிராமத்தில் நிலச்சரிவு. ஆறு வீடுகள் சேற்றில் மூழ்கிவிட்டன. மக்கள் உள்ளே மாட்டிக்கொண்டுள்ளனர். மீட்க வேண்டும்.",
+    ],
+    "romanized_tamil": [
+        "aiyaa nilacharivaa Badullala. malai idinju veedukal mela vizhuduchu. veedukulle makkal sikkiirukkaanga. meeppu kuzhu anupungal uadanae.",
+        "Bandarawela arukilae paraikkal idinju vizhuduchu. peria paraikkal veettu mela vizhuduchu. pillaigal ullae sikkiirukkaanga. uadanae varungal.",
+        "kiraamathula nilacharivaa. aaru veedukal seetrula moozhkiduchu. makkal ullae maattikirukkaanga. meekkaveendum.",
+    ],
+}
+
+# ============================================================
 # THIRD-PARTY REPORTING PHRASES — someone calling about another person
 # ============================================================
 THIRD_PARTY_SINHALA = [
@@ -638,8 +1005,10 @@ def build_scenarios(incident_type):
 
     if incident_type == "flood":
         critical_locs = ["Kelaniya", "Kaduwela", "Ratnapura_City", "Kandy_City", "Kalutara", "Panadura"]
-    else:
+    elif incident_type == "fire":
         critical_locs = ["Kolonnawa", "Wellampitiya", "Dematagoda", "Grandpass", "Mattakkuliya", "Battaramulla"]
+    else:  # landslide — higher-elevation, rain-prone districts in Western + Central
+        critical_locs = ["Ratnapura_City", "Kandy_City", "Kadugannawa", "Kuruwita", "Eheliyagoda", "Gampola"]
 
     # Critical mass-report (6 × 10-12 reports)
     for loc in critical_locs:
@@ -650,8 +1019,10 @@ def build_scenarios(incident_type):
     # Adjacent critical pairs (3 pairs × 5-7)
     if incident_type == "flood":
         pairs = [("Kolonnawa", "Wellampitiya"), ("Grandpass", "Dematagoda"), ("Katugastota", "Kandy_City")]
-    else:
+    elif incident_type == "fire":
         pairs = [("Kelaniya", "Kaduwela"), ("Panadura", "Horana"), ("Gampola", "Kadugannawa")]
+    else:  # landslide
+        pairs = [("Ratnapura_City", "Kuruwita"), ("Gampola", "Kadugannawa"), ("Eheliyagoda", "Kuruwita")]
     for l1, l2 in pairs:
         for loc in [l1, l2]:
             scenarios.append({"id": f"{incident_type.upper()}_{len(scenarios)+1:03d}", "location": loc,
@@ -661,8 +1032,10 @@ def build_scenarios(incident_type):
     # High (8 × 5-8)
     if incident_type == "flood":
         high_locs = ["Biyagama", "Wattala", "Negombo", "Gampaha_Town", "Beruwala", "Horana", "Peradeniya", "Gampola"]
-    else:
+    elif incident_type == "fire":
         high_locs = ["Ja-Ela", "Kadana", "Hanwella", "Avissawella", "Eheliyagoda", "Kuruwita", "Pelmadulla", "Balangoda"]
+    else:  # landslide
+        high_locs = ["Pelmadulla", "Balangoda", "Peradeniya", "Hanwella", "Avissawella", "Kadugannawa", "Horana", "Beruwala"]
     for loc in high_locs:
         scenarios.append({"id": f"{incident_type.upper()}_{len(scenarios)+1:03d}", "location": loc,
             "urgency": "HIGH", "report_count": random.randint(5, 8), "type": "standard",
@@ -788,6 +1161,22 @@ def build_scenarios(incident_type):
             "escalating": False,
         })
 
+    # Victim panic (8) — 1-5 word messages: "help gampola", "flood!", "SOS kelaniya"
+    # The victim is panicked / injured / has no time — bare minimum information.
+    # Different from minimal_message: panic messages ALWAYS contain either a
+    # location token or a disaster word (or both), and confidence is near-zero.
+    for loc in random.sample(loc_keys, 8):
+        scenarios.append({
+            "id": f"{incident_type.upper()}_{len(scenarios)+1:03d}",
+            "location": loc,
+            "urgency": random.choice(["CRITICAL", "HIGH"]),
+            "report_count": random.randint(1, 3),
+            "type": "victim_panic",
+            "base_offset": random.randint(0, 60),
+            "people_base": random.randint(1, 5),
+            "escalating": False,
+        })
+
     # Same-street neighbors (5 pairs) — two houses 10-50 m apart on the same street
     # Both resolve to the SAME GN centroid (identical lat/lng after geocoding)
     # MUST NOT merge — only distinguishing signals are address string + damage phrases
@@ -812,8 +1201,19 @@ def build_scenarios(incident_type):
 # ============================================================
 # 5. REPORT GENERATOR
 # ============================================================
-def get_phrases(incident_type, category, use_romanized, use_tamil=False):
-    if use_tamil:
+def get_phrases(incident_type, category, use_romanized, use_tamil=False, use_romanized_tamil=False):
+    if incident_type == "landslide":
+        if use_romanized_tamil:
+            src = ROMANIZED_TAMIL_LANDSLIDE
+        elif use_tamil:
+            src = TAMIL_LANDSLIDE
+        elif use_romanized:
+            src = ROMANIZED_LANDSLIDE
+        else:
+            src = LANDSLIDE_PHRASES
+    elif use_romanized_tamil:
+        src = ROMANIZED_TAMIL_FLOOD if incident_type == "flood" else ROMANIZED_TAMIL_FIRE
+    elif use_tamil:
         src = TAMIL_FLOOD if incident_type == "flood" else TAMIL_FIRE
     elif use_romanized:
         src = ROMANIZED_FLOOD if incident_type == "flood" else ROMANIZED_FIRE
@@ -829,23 +1229,28 @@ def generate_report(scenario, report_idx, base_time, channel, incident_type, voi
     profile = URGENCY_PROFILES[urgency]
 
     # Language assignment
-    # cross_lingual_duplicate: report 0 → Sinhala, report 1 → Tamil, rest → random
-    # This guarantees at least one Sinhala+Tamil positive pair per incident,
-    # giving XGBoost reliable cross-lingual training signal.
-    # All other scenarios: 60% Sinhala Unicode, 30% Romanized, 10% Tamil (random)
+    # cross_lingual_duplicate: report 0 → Sinhala, report 1 → Tamil,
+    #   report 2 → Romanized Tamil, rest → random
+    # All other scenarios:
+    #   35% Sinhala Unicode, 25% Romanized Sinhala, 25% Tamil, 15% Romanized Tamil
+    use_romanized_tamil = False
     if scenario["type"] == "cross_lingual_duplicate":
         if report_idx == 0:
             use_tamil, use_romanized = False, False       # Sinhala Unicode
         elif report_idx == 1:
             use_tamil, use_romanized = True, False        # Tamil
+        elif report_idx == 2:
+            use_tamil, use_romanized, use_romanized_tamil = False, False, True  # Romanized Tamil
         else:
             lang_roll = random.random()
-            use_tamil = lang_roll < 0.33                  # higher Tamil mix for rest
-            use_romanized = (not use_tamil) and (lang_roll < 0.66)
+            use_romanized_tamil = lang_roll < 0.20
+            use_tamil = (not use_romanized_tamil) and lang_roll < 0.45
+            use_romanized = (not use_romanized_tamil) and (not use_tamil) and lang_roll < 0.70
     else:
         lang_roll = random.random()
-        use_tamil = lang_roll < 0.10
-        use_romanized = (not use_tamil) and (lang_roll < 0.40)
+        use_romanized_tamil = lang_roll < 0.15
+        use_tamil = (not use_romanized_tamil) and lang_roll < 0.40
+        use_romanized = (not use_romanized_tamil) and (not use_tamil) and lang_roll < 0.65
 
     # Time
     if scenario["type"] == "long_gap" and report_idx >= scenario["report_count"] // 2:
@@ -875,34 +1280,56 @@ def generate_report(scenario, report_idx, base_time, channel, incident_type, voi
         confidence = round(max(0.3, confidence - random.uniform(0.05, 0.15)), 2)
 
     # Location
-    if use_tamil and loc_key in TAMIL_LOCATIONS:
+    if use_romanized_tamil and loc_key in ROMANIZED_TAMIL_LOCATIONS:
+        location_str = random.choice(ROMANIZED_TAMIL_LOCATIONS[loc_key])
+    elif use_tamil and loc_key in TAMIL_LOCATIONS:
         location_str = random.choice(TAMIL_LOCATIONS[loc_key])
     elif use_romanized:
         location_str = random.choice(loc["romanized"])
     else:
         location_str = random.choice(loc["sinhala"])
-    if not use_tamil and random.random() < 0.12:
+    if not use_tamil and not use_romanized_tamil and random.random() < 0.12:
         location_str = random.choice(loc["landmark"])
     if channel == "sms" and random.random() < 0.05:
         location_str = ""
 
-    # Key phrases
+    # Key phrases — categories differ by disaster type
     if incident_type == "flood":
         cats = ["water_level", "help_needed", "situation"]
-    else:
+    elif incident_type == "fire":
         cats = ["fire_status", "help_needed", "situation"]
-    kp = [get_phrases(incident_type, c, use_romanized, use_tamil) for c in cats]
+    else:  # landslide
+        cats = ["slide_status", "help_needed", "situation"]
+    kp = [get_phrases(incident_type, c, use_romanized, use_tamil, use_romanized_tamil) for c in cats]
     kp.append(random.choice(profile["extra"]))
+
+    # Full conversation transcript for voice calls
+    transcript = None
+    if channel == "voice" and random.random() < 0.75:
+        if incident_type == "flood":
+            conv_pool = VOICE_CONVERSATIONS_FLOOD
+        elif incident_type == "fire":
+            conv_pool = VOICE_CONVERSATIONS_FIRE
+        else:
+            conv_pool = VOICE_CONVERSATIONS_LANDSLIDE
+        if use_romanized_tamil:
+            transcript = random.choice(conv_pool.get("romanized_tamil", conv_pool["romanized"]))
+        elif use_tamil:
+            transcript = random.choice(conv_pool["tamil"])
+        elif use_romanized:
+            transcript = random.choice(conv_pool["romanized"])
+        else:
+            transcript = random.choice(conv_pool["sinhala"])
 
     # ── Scenario-specific overrides ──────────────────────────────────────────
 
     # victim_address: replace location with a precise house address
     if scenario["type"] == "victim_address":
-        location_str = _make_address(loc_key, loc, use_tamil, use_romanized)
+        location_str = _make_address(loc_key, loc, use_tamil or use_romanized_tamil, use_romanized)
 
     # location_unknown: caller cannot state where they are
     elif scenario["type"] == "location_unknown":
-        if use_tamil:
+        if use_tamil or use_romanized_tamil:
             location_str = random.choice(UNKNOWN_LOC_TAMIL)
         elif use_romanized:
             location_str = random.choice(UNKNOWN_LOC_ROMANIZED)
@@ -912,17 +1339,40 @@ def generate_report(scenario, report_idx, base_time, channel, incident_type, voi
     # minimal_message: 1-2 words, no location, no people count, low confidence
     elif scenario["type"] == "minimal_message":
         location_str = ""
-        minimal_pool = MINIMAL_FLOOD if incident_type == "flood" else MINIMAL_FIRE
+        if incident_type == "landslide":
+            minimal_pool = MINIMAL_LANDSLIDE
+        elif incident_type == "flood":
+            minimal_pool = MINIMAL_FLOOD
+        else:
+            minimal_pool = MINIMAL_FIRE
         kp = random.sample(minimal_pool, random.randint(1, 2))
         people = None
         confidence = round(random.uniform(0.20, 0.45), 2)
+
+    # victim_panic: 1-5 word panic message — "help gampola", "flood!", "SOS kelaniya"
+    # Location may or may not be present. No structured fields at all.
+    elif scenario["type"] == "victim_panic":
+        panic_pool = _make_panic_messages(loc_key, loc, incident_type)
+        panic_msg = random.choice(panic_pool)
+        # The panic message IS the entire content — key_phrases = [panic_msg]
+        kp = [panic_msg]
+        # Location: sometimes inferable from the message, sometimes totally absent
+        if any(name.lower() in panic_msg.lower()
+               for name in loc.get("romanized", []) + loc.get("sinhala", [])):
+            # location token is in the message — keep it as location_raw too
+            location_str = panic_msg
+        else:
+            location_str = ""
+        people = None
+        confidence = round(random.uniform(0.10, 0.35), 2)
+        transcript = None   # no transcript — caller hung up immediately
 
     # same_street_neighbors: different house number per house_idx + house-specific damage
     elif scenario["type"] == "same_street_neighbors":
         house_idx = scenario.get("house_idx", 0)
         house_num = random.randint(10, 40) if house_idx == 0 else random.randint(50, 90)
         sub = random.choice(["", "/A", "/B", f"/{random.randint(1,5)}"])
-        if use_tamil:
+        if use_tamil or use_romanized_tamil:
             town = random.choice(TAMIL_LOCATIONS.get(loc_key, [loc_key]))
             location_str = f"{house_num}{sub}, {random.choice(_STREET_TA)}, {town}"
         elif use_romanized:
@@ -932,13 +1382,15 @@ def generate_report(scenario, report_idx, base_time, channel, incident_type, voi
             town = random.choice(loc["sinhala"])
             location_str = f"{house_num}{sub}, {town} {random.choice(_STREET_SI)}"
         # Replace first key phrase with house-specific structural/depth damage phrase
-        damage = HOUSE_DAMAGE_FLOOD[house_idx] if incident_type == "flood" else HOUSE_DAMAGE_FIRE[house_idx]
-        if use_tamil:
-            kp[0] = random.choice(damage["tamil"])
-        elif use_romanized:
-            kp[0] = random.choice(damage["romanized"])
-        else:
-            kp[0] = random.choice(damage["sinhala"])
+        # (landslide doesn't have house_damage variants — use regular phrases)
+        if incident_type in ("flood", "fire"):
+            damage = HOUSE_DAMAGE_FLOOD[house_idx] if incident_type == "flood" else HOUSE_DAMAGE_FIRE[house_idx]
+            if use_tamil or use_romanized_tamil:
+                kp[0] = random.choice(damage["tamil"])
+            elif use_romanized:
+                kp[0] = random.choice(damage["romanized"])
+            else:
+                kp[0] = random.choice(damage["sinhala"])
 
     # Urgency variation
     reported_urgency = urgency
@@ -987,12 +1439,18 @@ def generate_report(scenario, report_idx, base_time, channel, incident_type, voi
 
     # Third-party reporting: add proxy phrases
     if scenario["type"] == "third_party" and random.random() < 0.6:
-        if use_tamil:
+        if use_romanized_tamil:
+            kp.insert(0, random.choice(ROMANIZED_TAMIL_THIRD_PARTY))
+        elif use_tamil:
             kp.insert(0, random.choice(THIRD_PARTY_TAMIL))
         elif use_romanized:
             kp.insert(0, random.choice(THIRD_PARTY_ROMANIZED))
         else:
             kp.insert(0, random.choice(THIRD_PARTY_SINHALA))
+
+    # Attach transcript to voice call reports
+    if transcript:
+        report["transcript"] = transcript
 
     # GN-level coordinate precision
     # minimal_message: no location info at all — ground truth coords also unknown
@@ -1017,7 +1475,9 @@ def generate_report(scenario, report_idx, base_time, channel, incident_type, voi
             gt_lat = gn["lat"]
             gt_lng = gn["lng"]
 
-    if use_tamil:
+    if use_romanized_tamil:
+        lang_label = "romanized_tamil"
+    elif use_tamil:
         lang_label = "tamil"
     elif use_romanized:
         lang_label = "romanized_sinhala"
@@ -1086,35 +1546,37 @@ def generate_for_type(incident_type, base_time, target_count=500):
 def generate_dataset():
     base_time = datetime(2025, 5, 17, 6, 0, 0, tzinfo=timezone.utc)
 
-    flood_reports, fv, fs = generate_for_type("flood", base_time, target_count=500)
-    fire_reports, rv, rs = generate_for_type("fire", base_time + timedelta(hours=1), target_count=500)
+    flood_reports,     fv, fs = generate_for_type("flood",     base_time,                       target_count=500)
+    fire_reports,      rv, rs = generate_for_type("fire",      base_time + timedelta(hours=1),  target_count=500)
+    landslide_reports, lv, ls = generate_for_type("landslide", base_time + timedelta(hours=2),  target_count=500)
 
-    all_reports = flood_reports + fire_reports
+    all_reports = flood_reports + fire_reports + landslide_reports
 
-    # Language stats
-    lang_counts = Counter(r["_ground_truth"]["language"] for r in all_reports)
-    # Scenario type stats
+    lang_counts     = Counter(r["_ground_truth"]["language"]      for r in all_reports)
     scenario_counts = Counter(r["_ground_truth"]["scenario_type"] for r in all_reports)
+    district_counts = Counter(r["_ground_truth"]["district"]      for r in all_reports)
 
     dataset = {
         "metadata": {
-            "dataset_name": "C4 Flood+Fire Evaluation Dataset — Sinhala + Tamil",
+            "dataset_name": "C4 Flood+Fire+Landslide Dataset — Sinhala + Romanized Sinhala + Tamil + Romanized Tamil",
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "total_reports": len(all_reports),
             "flood_reports": len(flood_reports),
             "fire_reports": len(fire_reports),
-            "voice_reports": fv + rv,
-            "sms_reports": fs + rs,
-            "language": "Sinhala (Unicode + Romanized) + Tamil",
+            "landslide_reports": len(landslide_reports),
+            "voice_reports": fv + rv + lv,
+            "sms_reports": fs + rs + ls,
+            "language": "Sinhala Unicode + Romanized Sinhala + Tamil + Romanized Tamil",
             "provinces": ["Western", "Central"],
-            "districts": ["Colombo", "Gampaha", "Kalutara", "Kandy", "Ratnapura"],
-            "incident_types": ["flood", "fire"],
+            "incident_types": ["flood", "fire", "landslide"],
             "language_distribution": dict(lang_counts),
             "scenario_distribution": dict(scenario_counts),
+            "district_distribution": dict(district_counts),
             "gn_precision": len(_GN_BY_DS) > 0,
             "per_type": {
-                "flood": {"total": len(flood_reports), "voice": fv, "sms": fs},
-                "fire": {"total": len(fire_reports), "voice": rv, "sms": rs},
+                "flood":     {"total": len(flood_reports),     "voice": fv, "sms": fs},
+                "fire":      {"total": len(fire_reports),      "voice": rv, "sms": rs},
+                "landslide": {"total": len(landslide_reports), "voice": lv, "sms": ls},
             },
         },
         "reports": all_reports,
@@ -1123,7 +1585,7 @@ def generate_dataset():
 
 
 if __name__ == "__main__":
-    print("Generating C4 evaluation dataset (1000 reports)...")
+    print("Generating C4 evaluation dataset (1500 reports)...")
     dataset = generate_dataset()
 
     os.makedirs("data", exist_ok=True)
@@ -1135,11 +1597,14 @@ if __name__ == "__main__":
     print(f"\n{'='*60}")
     print(f"  DATASET GENERATED")
     print(f"{'='*60}")
-    print(f"  Total:   {m['total_reports']} reports")
-    print(f"  Flood:   {m['per_type']['flood']['total']} (voice={m['per_type']['flood']['voice']}, sms={m['per_type']['flood']['sms']})")
-    print(f"  Fire:    {m['per_type']['fire']['total']} (voice={m['per_type']['fire']['voice']}, sms={m['per_type']['fire']['sms']})")
-    print(f"  Language: {m['language_distribution']}")
+    print(f"  Total:     {m['total_reports']} reports")
+    print(f"  Flood:     {m['per_type']['flood']['total']} (voice={m['per_type']['flood']['voice']}, sms={m['per_type']['flood']['sms']})")
+    print(f"  Fire:      {m['per_type']['fire']['total']} (voice={m['per_type']['fire']['voice']}, sms={m['per_type']['fire']['sms']})")
+    print(f"  Landslide: {m['per_type']['landslide']['total']} (voice={m['per_type']['landslide']['voice']}, sms={m['per_type']['landslide']['sms']})")
+    print(f"  Language:  {m['language_distribution']}")
+    print(f"  Provinces: {m['provinces']}")
     print(f"  Scenarios: {m['scenario_distribution']}")
+    print(f"  Districts: {m['district_distribution']}")
     print(f"  GN precision: {m['gn_precision']}")
     print(f"  Saved: {out}")
     print(f"{'='*60}")
