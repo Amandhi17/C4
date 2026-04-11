@@ -33,8 +33,6 @@ print("=" * 55)
 
 DPATH = ROOT / "data" / "disaster_dataset_1000.json"
 if not DPATH.exists():
-    DPATH = ROOT / "data" / "disaster_dataset_800.json"  # fallback
-if not DPATH.exists():
     print(f"  Dataset not found: {DPATH}")
     print(f"  Run: python generate_dataset.py")
     sys.exit(1)

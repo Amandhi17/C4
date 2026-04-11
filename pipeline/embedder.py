@@ -226,7 +226,7 @@ if __name__ == "__main__":
     from pipeline.normalizer import normalize_batch, reset_counters
     from pipeline.gazetteer import resolve_batch
 
-    with open("/home/claude/data/disaster_dataset_600.json") as f:
+    with open("data/disaster_dataset_1000.json") as f:
         dataset = json.load(f)
 
     reset_counters()

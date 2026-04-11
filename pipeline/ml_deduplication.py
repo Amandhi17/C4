@@ -852,7 +852,7 @@ if __name__ == '__main__':
     from pipeline.gazetteer import resolve_batch
     from pipeline.embedder import embed_batch
 
-    data_path = Path('data/disaster_dataset_600.json')
+    data_path = Path('data/disaster_dataset_1000.json')
     if not data_path.exists():
         print("Dataset not found. Run: python generate_dataset.py")
         sys.exit(1)

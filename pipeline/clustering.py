@@ -741,7 +741,7 @@ if __name__ == "__main__":
     from pipeline.embedder import embed_batch
     
     print("Loading dataset...")
-    with open("/home/claude/data/disaster_dataset_600.json") as f:
+    with open("data/disaster_dataset_1000.json") as f:
         dataset = json.load(f)
     
     print("Stage 1-2: Normalizing...")
