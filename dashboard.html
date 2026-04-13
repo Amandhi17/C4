@@ -103,7 +103,7 @@
   .dashboard-layout {
     display: grid;
     grid-template-columns: 320px 1fr 400px;
-    height: calc(100vh - 48px);
+    height: calc(100vh - 48px - 50px);
   }
 
   /* ── LEFT: INCIDENT LIST (Panel 2) ──────────────── */
@@ -233,6 +233,42 @@
     border: 2px solid;
   }
 
+  /* ── RIGHT PANEL TABS ───────────────────────────────── */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+    background: var(--bg-secondary);
+    overflow: hidden;
+  }
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+    flex-shrink: 0;
+  }
+  .panel-tab {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 11px 8px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .panel-tab:hover { color: var(--text-primary); }
+  .panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .panel-tab-content { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
   /* ── RIGHT: DETAIL PANEL (Panel 3 & 4) ─────────── */
   .detail-panel {
     background: var(--bg-secondary);
@@ -241,6 +277,62 @@
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
   }
+
+  /* ── ML PANEL ────────────────────────────────────────── */
+  .ml-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .ml-compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-top: 10px;
+  }
+  .ml-compare-table th {
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ml-compare-table th:first-child { text-align: left; }
+  .ml-compare-table td {
+    padding: 7px 6px;
+    border-bottom: 1px solid rgba(42,54,84,0.5);
+    color: var(--text-secondary);
+    text-align: right;
+  }
+  .ml-compare-table td:first-child { text-align: left; }
+  .ml-compare-table tr.best-row td { color: var(--text-primary); font-weight: 600; }
+  .ml-compare-table tr.best-row td:first-child { color: var(--accent); }
+  .auc-cell { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+  .auc-bar { height: 6px; border-radius: 3px; background: var(--accent); opacity: 0.7; transition: width 0.4s; }
+  .best-row .auc-bar { opacity: 1; }
+  .best-badge {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px;
+    background: rgba(59,130,246,0.15); color: var(--accent);
+    border: 1px solid rgba(59,130,246,0.3); margin-left: 4px;
+  }
+  .ml-run-btn {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.5px; padding: 8px 16px;
+    border: 1px solid rgba(59,130,246,0.4); border-radius: 4px;
+    background: rgba(59,130,246,0.08); color: var(--accent);
+    cursor: pointer; transition: all 0.15s; width: 100%; margin-top: 10px;
+  }
+  .ml-run-btn:hover:not(:disabled) { background: rgba(59,130,246,0.18); }
+  .ml-run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .fi-row { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+  .fi-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); width: 130px; flex-shrink: 0; }
+  .fi-bar { height: 5px; border-radius: 3px; background: var(--accent); opacity: 0.8; }
+  .fi-val { font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); }
+  .ml-kv { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(42,54,84,0.4); }
+  .ml-kv:last-child { border-bottom: none; }
+  .ml-kv-key { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .ml-kv-val { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-primary); }
+  .ml-kv-val.good { color: var(--success); }
+  .ml-kv-val.warn { color: var(--high); }
+  .ml-empty { padding: 32px 16px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
   .detail-empty {
     display: flex;
     align-items: center;
@@ -452,97 +544,216 @@
     border: 1px solid var(--border);
   }
 
-  /* ── RIGHT PANEL TABS ───────────────────────────────── */
-  .right-panel {
+  /* ── SEARCH & FILTER ────────────────────────────── */
+  .list-search {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
     display: flex;
     flex-direction: column;
-    border-left: 1px solid var(--border);
-    background: var(--bg-secondary);
-    overflow: hidden;
+    gap: 8px;
+    position: sticky;
+    top: 45px;
+    z-index: 9;
   }
-  .panel-tabs {
+  .search-input {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px 7px 30px;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-family: var(--font-sans);
+    outline: none;
+    transition: border-color 0.15s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 9px center;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text-muted); }
+  .filter-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+  .filter-pill {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-pill:hover { color: var(--text-primary); border-color: var(--border-light); }
+  .filter-pill.active-CRITICAL { background: var(--critical-bg); color: var(--critical); border-color: var(--critical-border); }
+  .filter-pill.active-HIGH { background: var(--high-bg); color: var(--high); border-color: var(--high-border); }
+  .filter-pill.active-MEDIUM { background: var(--medium-bg); color: var(--medium); border-color: var(--medium-border); }
+  .filter-pill.active-LOW { background: var(--low-bg); color: var(--low); border-color: var(--low-border); }
+  .filter-pill.active-ALL { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+
+  /* ── TOAST NOTIFICATIONS ─────────────────────────── */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
     display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    pointer-events: none;
+  }
+  .toast {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-panel);
+    color: var(--text-primary);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toast-in 0.25s ease;
+    white-space: nowrap;
+  }
+  .toast.success { border-color: rgba(34,197,94,0.4); }
+  .toast.error { border-color: rgba(239,68,68,0.4); }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── STATS STRIP ─────────────────────────────────── */
+  .stats-strip {
+    display: flex;
+    gap: 0;
     border-bottom: 1px solid var(--border);
     background: var(--bg-panel);
-    flex-shrink: 0;
-  }
-  .panel-tab {
-    flex: 1;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    padding: 11px 8px;
-    text-align: center;
-    cursor: pointer;
-    color: var(--text-muted);
-    border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-    background: none;
-    border-top: none;
-    border-left: none;
-    border-right: none;
-  }
-  .panel-tab:hover { color: var(--text-primary); }
-  .panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .panel-tab-content { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-
-  /* ── ML PANEL ────────────────────────────────────────── */
-  .ml-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
-  .ml-compare-table {
-    width: 100%;
-    border-collapse: collapse;
     font-family: var(--font-mono);
     font-size: 11px;
-    margin-top: 10px;
+    overflow: hidden;
   }
-  .ml-compare-table th {
-    text-align: right;
+  .stat-chip {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    border-right: 1px solid var(--border);
+    gap: 2px;
+  }
+  .stat-chip:last-child { border-right: none; }
+  .stat-chip .s-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; }
+  .stat-chip .s-value { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .stat-chip .s-value.critical { color: var(--critical); }
+  .stat-chip .s-value.success { color: var(--success); }
+  .stat-chip .s-value.flood { color: #60a5fa; }
+  .stat-chip .s-value.fire { color: var(--high); }
+
+  /* ── CARD TIME ──────────────────────────────────── */
+  .card-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
     color: var(--text-muted);
-    font-size: 9px;
-    letter-spacing: 0.5px;
-    padding: 4px 6px;
-    border-bottom: 1px solid var(--border);
+    margin-left: auto;
   }
-  .ml-compare-table th:first-child { text-align: left; }
-  .ml-compare-table td {
-    padding: 7px 6px;
-    border-bottom: 1px solid rgba(42,54,84,0.5);
+
+  /* ── IMPROVED ACTION BUTTONS ─────────────────────── */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 14px 16px;
+  }
+  .action-btn-v2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-sans);
+  }
+  .action-btn-v2:hover { background: var(--bg-hover); border-color: var(--border-light); transform: translateY(-1px); }
+  .action-btn-v2 .btn-icon { font-size: 18px; }
+  .action-btn-v2 .btn-label { font-size: 11px; font-weight: 700; font-family: var(--font-mono); letter-spacing: 0.3px; }
+  .action-btn-v2 .btn-desc { font-size: 10px; color: var(--text-muted); text-align: center; line-height: 1.3; }
+  .action-btn-v2.confirm { border-color: rgba(34,197,94,0.35); }
+  .action-btn-v2.confirm:hover { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.6); }
+  .action-btn-v2.confirm .btn-label { color: var(--success); }
+  .action-btn-v2.dismiss { border-color: rgba(239,68,68,0.3); }
+  .action-btn-v2.dismiss:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.6); }
+  .action-btn-v2.dismiss .btn-label { color: var(--critical); }
+  .action-btn-v2.split .btn-label { color: var(--high); }
+  .action-btn-v2.merge .btn-label { color: var(--accent); }
+  .action-btn-v2.correct .btn-label { color: var(--medium); }
+  .action-btn-v2.full-width { grid-column: span 2; flex-direction: row; justify-content: center; gap: 8px; }
+
+  /* ── MAP STATS OVERLAY ──────────────────────────── */
+  .map-stats-overlay {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(17,24,39,0.88);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 16px;
+    z-index: 500;
+    font-family: var(--font-mono);
+    font-size: 11px;
     color: var(--text-secondary);
-    text-align: right;
+    backdrop-filter: blur(8px);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    pointer-events: none;
   }
-  .ml-compare-table td:first-child { text-align: left; }
-  .ml-compare-table tr.best-row td { color: var(--text-primary); font-weight: 600; }
-  .ml-compare-table tr.best-row td:first-child { color: var(--accent); }
-  .auc-cell { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
-  .auc-bar { height: 6px; border-radius: 3px; background: var(--accent); opacity: 0.7; transition: width 0.4s; }
-  .best-row .auc-bar { opacity: 1; }
-  .best-badge {
-    font-size: 9px; padding: 1px 5px; border-radius: 3px;
-    background: rgba(59,130,246,0.15); color: var(--accent);
-    border: 1px solid rgba(59,130,246,0.3); margin-left: 4px;
+  .map-stat { display: flex; align-items: center; gap: 5px; }
+
+  /* ── EMPTY STATE ──────────────────────────────────── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    padding: 32px;
+    text-align: center;
   }
-  .ml-run-btn {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-    letter-spacing: 0.5px; padding: 8px 16px;
-    border: 1px solid rgba(59,130,246,0.4); border-radius: 4px;
-    background: rgba(59,130,246,0.08); color: var(--accent);
-    cursor: pointer; transition: all 0.15s; width: 100%; margin-top: 10px;
+  .empty-state .empty-icon { font-size: 36px; opacity: 0.5; }
+  .empty-state .empty-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+  .empty-state .empty-hint { font-size: 12px; color: var(--text-muted); line-height: 1.6; max-width: 220px; }
+
+  /* ── CONFIDENCE GAUGE ────────────────────────────── */
+  .confidence-gauge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .ml-run-btn:hover:not(:disabled) { background: rgba(59,130,246,0.18); }
-  .ml-run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .fi-row { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
-  .fi-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); width: 130px; flex-shrink: 0; }
-  .fi-bar { height: 5px; border-radius: 3px; background: var(--accent); opacity: 0.8; }
-  .fi-val { font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); }
-  .ml-kv { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(42,54,84,0.4); }
-  .ml-kv:last-child { border-bottom: none; }
-  .ml-kv-key { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
-  .ml-kv-val { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-primary); }
-  .ml-kv-val.good { color: var(--success); }
-  .ml-kv-val.warn { color: var(--high); }
-  .ml-empty { padding: 32px 16px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
+  .gauge-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .gauge-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
 </style>
 </head>
 <body>
@@ -550,6 +761,16 @@
 
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback } = React;
+
+// ── Helpers ──────────────────────────────────────────────────
+function timeAgo(iso) {
+  if (!iso) return '—';
+  const secs = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (secs < 60) return `${secs}s ago`;
+  if (secs < 3600) return `${Math.floor(secs/60)}m ago`;
+  if (secs < 86400) return `${Math.floor(secs/3600)}h ago`;
+  return new Date(iso).toLocaleDateString();
+}
 
 // ============================================================
 // URGENCY COLORS
@@ -565,9 +786,10 @@ const URGENCY_COLORS = {
 // STATUS BAR
 // ============================================================
 function StatusBar({ stats, uirCount, flaggedCount }) {
-  const latencyAlert = stats.pipeline_latency_ms > 10000;
-  const latencyWarn = stats.pipeline_latency_ms > 5000;
-  
+  const [now, setNow] = useState(new Date());
+  useEffect(() => { const t = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(t); }, []);
+  const precision = stats.precision != null ? `${(stats.precision * 100).toFixed(1)}%` : '—';
+
   return (
     <div className="status-bar">
       <div className="title">
@@ -576,28 +798,32 @@ function StatusBar({ stats, uirCount, flaggedCount }) {
       </div>
       <div className="status-metrics">
         <div className="metric">
-          <span className="label">RPM</span>
-          <span className="value">{stats.reports_per_minute || 0}</span>
-        </div>
-        <div className="metric">
-          <span className="label">ACTIVE</span>
+          <span className="label">ACTIVE UIRs</span>
           <span className="value">{uirCount}</span>
         </div>
         <div className="metric">
-          <span className="label">FLAGGED</span>
-          <span className={`value ${flaggedCount > 0 ? 'warning' : ''}`}>
-            {flaggedCount}
-          </span>
+          <span className="label">🌊 FLOOD</span>
+          <span className="value" style={{color:'#60a5fa'}}>{stats.flood_uirs ?? '—'}</span>
         </div>
         <div className="metric">
-          <span className="label">LATENCY</span>
-          <span className={`value ${latencyAlert ? 'alert' : latencyWarn ? 'warning' : ''}`}>
-            {stats.pipeline_latency_ms || 0}ms
-          </span>
+          <span className="label">🔥 FIRE</span>
+          <span className="value" style={{color:'var(--high)'}}>{stats.fire_uirs ?? '—'}</span>
+        </div>
+        <div className="metric">
+          <span className="label">FLAGGED</span>
+          <span className={`value ${flaggedCount > 0 ? 'warning' : ''}`}>{flaggedCount}</span>
         </div>
         <div className="metric">
           <span className="label">REPORTS</span>
-          <span className="value">{stats.total_reports || 0}/300</span>
+          <span className="value">{stats.total_reports || 0}</span>
+        </div>
+        <div className="metric">
+          <span className="label">PRECISION</span>
+          <span className="value" style={{color:'var(--success)'}}>{precision}</span>
+        </div>
+        <div className="metric">
+          <span className="label">TIME</span>
+          <span className="value">{now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
         </div>
       </div>
     </div>
@@ -607,47 +833,93 @@ function StatusBar({ stats, uirCount, flaggedCount }) {
 // ============================================================
 // INCIDENT LIST (Panel 2)
 // ============================================================
+const URGENCY_ORDER = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+
 function IncidentList({ uirs, selectedId, onSelect }) {
+  const [search, setSearch] = useState('');
+  const [filterUrgency, setFilterUrgency] = useState('ALL');
+
+  const filtered = uirs.filter(u => {
+    if (filterUrgency !== 'ALL' && u.urgency !== filterUrgency) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return u.location?.display_name?.toLowerCase().includes(q)
+          || u.incident_type?.toLowerCase().includes(q)
+          || u.uir_id?.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const urgencyCounts = {};
+  uirs.forEach(u => { urgencyCounts[u.urgency] = (urgencyCounts[u.urgency] || 0) + 1; });
+
   return (
     <div className="incident-list">
       <div className="list-header">
         <span>ACTIVE INCIDENTS</span>
-        <span className="count">{uirs.length}</span>
+        <span className="count">{filtered.length}/{uirs.length}</span>
       </div>
-      {uirs.map(uir => (
-        <div
-          key={uir.uir_id}
-          className={`incident-card ${selectedId === uir.uir_id ? 'selected' : ''}`}
-          onClick={() => onSelect(uir)}
-        >
-          <div className="card-header">
-            <div className="card-title">
-              <span className={`urgency-badge ${uir.urgency}`}>{uir.urgency}</span>
-              <span>{uir.incident_type === 'fire' ? '🔥' : '🌊'} {uir.incident_type.toUpperCase()}</span>
-            </div>
-            {uir.flags.length > 0 && <span className="flag-icon">⚠</span>}
-          </div>
-          <div style={{fontSize: '12px', marginBottom: '4px', color: '#e2e8f0'}}>
-            📍 {uir.location.display_name}
-          </div>
-          <div className="card-meta">
-            <span>🔗 {uir.source_count} sources</span>
-            <span>👥 {uir.people_involved?.value ?? '—'}</span>
-            <span>
-              <span className="confidence-bar">
-                <span
-                  className="confidence-fill"
-                  style={{
-                    width: `${(uir.confidence || 0) * 100}%`,
-                    background: uir.confidence > 0.7 ? '#22c55e' : uir.confidence > 0.5 ? '#eab308' : '#ef4444'
-                  }}
-                />
-              </span>
-              {' '}{Math.round((uir.confidence || 0) * 100)}%
-            </span>
-          </div>
+
+      <div className="list-search">
+        <input
+          className="search-input"
+          placeholder="Search location, type, ID…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <div className="filter-pills">
+          {['ALL','CRITICAL','HIGH','MEDIUM','LOW'].map(u => (
+            <button
+              key={u}
+              className={`filter-pill ${filterUrgency === u ? `active-${u}` : ''}`}
+              onClick={() => setFilterUrgency(u)}
+            >
+              {u === 'ALL' ? `ALL (${uirs.length})` : `${u} (${urgencyCounts[u] || 0})`}
+            </button>
+          ))}
         </div>
-      ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div style={{padding:'24px 16px', textAlign:'center', color:'var(--text-muted)', fontSize:'12px'}}>
+          No incidents match your filter.
+        </div>
+      )}
+
+      {filtered.map(uir => {
+        const confColor = uir.confidence > 0.7 ? '#22c55e' : uir.confidence > 0.5 ? '#eab308' : '#ef4444';
+        return (
+          <div
+            key={uir.uir_id}
+            className={`incident-card ${selectedId === uir.uir_id ? 'selected' : ''}`}
+            onClick={() => onSelect(uir)}
+          >
+            <div className="card-header">
+              <div className="card-title">
+                <span className={`urgency-badge ${uir.urgency}`}>{uir.urgency}</span>
+                <span>{uir.incident_type === 'fire' ? '🔥' : '🌊'} {uir.incident_type.toUpperCase()}</span>
+              </div>
+              <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
+                {uir.flags.length > 0 && <span className="flag-icon" title="Has flags">⚠</span>}
+                <span className="card-time">{timeAgo(uir.last_updated)}</span>
+              </div>
+            </div>
+            <div style={{fontSize: '12px', marginBottom: '6px', color: '#e2e8f0'}}>
+              📍 {uir.location.display_name}
+            </div>
+            <div className="card-meta">
+              <span>🔗 {uir.source_count} src</span>
+              <span>👥 {uir.people_involved?.value ?? '—'}</span>
+              <span style={{marginLeft:'auto', display:'flex', alignItems:'center', gap:'4px'}}>
+                <span className="confidence-bar">
+                  <span className="confidence-fill" style={{width:`${(uir.confidence||0)*100}%`, background: confColor}} />
+                </span>
+                {Math.round((uir.confidence||0)*100)}%
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -659,14 +931,20 @@ function DetailPanel({ uir, onAction }) {
   if (!uir) {
     return (
       <div className="detail-panel">
-        <div className="detail-empty">
-          <span style={{fontSize: '24px'}}>📋</span>
-          <span>Select an incident to view details</span>
+        <div className="empty-state">
+          <span className="empty-icon">📋</span>
+          <span className="empty-title">No incident selected</span>
+          <span className="empty-hint">Click any incident in the list or tap a map marker to view details and take action.</span>
         </div>
       </div>
     );
   }
-  
+
+  const confPct = Math.round((uir.confidence || 0) * 100);
+  const confColor = confPct > 70 ? 'var(--success)' : confPct > 50 ? '#eab308' : 'var(--critical)';
+  const callCount = uir.sources?.filter(s => s.channel === 'voice').length || 0;
+  const smsCount  = uir.sources?.filter(s => s.channel === 'sms').length || 0;
+
   return (
     <div className="detail-panel">
       {/* Header */}
@@ -676,36 +954,62 @@ function DetailPanel({ uir, onAction }) {
           {uir.incident_type === 'fire' ? '🔥' : '🌊'} {uir.incident_type.toUpperCase()} — {uir.location.display_name}
         </div>
         <div className="detail-subtitle">
-          {uir.uir_id} · Updated {uir.last_updated ? new Date(uir.last_updated).toLocaleTimeString() : '—'}
+          {uir.uir_id} · {timeAgo(uir.last_updated)}
+          {uir.status === 'confirmed' && <span style={{color:'var(--success)', marginLeft:'8px'}}>✓ Confirmed</span>}
         </div>
       </div>
-      
+
+      {/* Flags */}
+      {uir.flags.length > 0 && (
+        <div className="detail-section" style={{background:'rgba(249,115,22,0.04)'}}>
+          <div className="section-title" style={{color:'var(--high)'}}>⚠ Flags Requiring Review</div>
+          <div className="flags-container">
+            {uir.flags.map((flag, i) => (
+              <span key={i} className={`flag-tag ${flag.includes('operator') ? 'critical-flag' : ''}`}>
+                {flag.replace(/_/g,' ')}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Info Grid */}
       <div className="detail-section">
-        <div className="section-title">Incident Intelligence</div>
+        <div className="section-title">Incident Details</div>
         <div className="info-grid">
           <div className="info-item">
             <div className="info-label">People Involved</div>
             <div className={`info-value ${uir.people_involved?.conflict ? 'conflict' : ''}`}>
               {uir.people_involved?.value ?? '—'}
-              {uir.people_involved?.conflict && ' ⚠'}
-            </div>
-          </div>
-          <div className="info-item">
-            <div className="info-label">Confidence</div>
-            <div className="info-value">{Math.round((uir.confidence || 0) * 100)}%</div>
-          </div>
-          <div className="info-item">
-            <div className="info-label">Location</div>
-            <div className="info-value" style={{fontSize: '12px'}}>
-              {uir.location.resolved ? '✅' : '⚠️'} {uir.location.display_name}
+              {uir.people_involved?.conflict && ' ⚠ conflict'}
             </div>
           </div>
           <div className="info-item">
             <div className="info-label">Sources</div>
             <div className="info-value">
-              {uir.sources?.filter(s => s.channel === 'voice').length || 0} calls,{' '}
-              {uir.sources?.filter(s => s.channel === 'sms').length || 0} SMS
+              {callCount > 0 && <span style={{color:'var(--accent)'}}>📞 {callCount}</span>}
+              {callCount > 0 && smsCount > 0 && ' · '}
+              {smsCount > 0 && <span style={{color:'var(--success)'}}>💬 {smsCount}</span>}
+            </div>
+          </div>
+          <div className="info-item" style={{gridColumn:'span 2'}}>
+            <div className="info-label" style={{marginBottom:'6px'}}>Confidence — {confPct}%</div>
+            <div className="confidence-gauge">
+              <div className="gauge-track">
+                <div className="gauge-fill" style={{width:`${confPct}%`, background: confColor}} />
+              </div>
+              <span style={{fontFamily:'var(--font-mono)', fontSize:'12px', fontWeight:700, color: confColor}}>{confPct}%</span>
+            </div>
+          </div>
+          <div className="info-item" style={{gridColumn:'span 2'}}>
+            <div className="info-label">Location</div>
+            <div style={{fontSize:'12px', marginTop:'2px', color: uir.location.resolved ? 'var(--text-primary)' : 'var(--high)'}}>
+              {uir.location.resolved ? '✅' : '⚠️'} {uir.location.display_name}
+              {uir.location?.lat && (
+                <span style={{color:'var(--text-muted)', fontFamily:'var(--font-mono)', fontSize:'10px', marginLeft:'8px'}}>
+                  {uir.location.lat?.toFixed(4)}, {uir.location.lng?.toFixed(4)}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -717,21 +1021,7 @@ function DetailPanel({ uir, onAction }) {
           </div>
         )}
       </div>
-      
-      {/* Flags */}
-      {uir.flags.length > 0 && (
-        <div className="detail-section">
-          <div className="section-title">Flags</div>
-          <div className="flags-container">
-            {uir.flags.map((flag, i) => (
-              <span key={i} className={`flag-tag ${flag.includes('operator') ? 'critical-flag' : ''}`}>
-                {flag}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      
+
       {/* Sources */}
       <div className="detail-section">
         <div className="section-title">Contributing Sources</div>
@@ -741,84 +1031,97 @@ function DetailPanel({ uir, onAction }) {
               <span className={`source-channel ${src.channel}`}>
                 {src.channel === 'voice' ? '📞 CALL' : '💬 SMS'}
               </span>
-              <span style={{fontFamily: 'var(--font-mono)', fontSize: '11px'}}>{src.id}</span>
-              <span style={{color: 'var(--text-muted)', fontSize: '11px', marginLeft: 'auto'}}>
+              <span style={{fontFamily:'var(--font-mono)', fontSize:'11px'}}>{src.id}</span>
+              <span style={{color:'var(--text-muted)', fontSize:'10px', marginLeft:'auto'}}>
+                {src.time ? timeAgo(src.time) : '—'}
+              </span>
+              <span style={{fontFamily:'var(--font-mono)', fontSize:'11px', color: src.confidence > 0.7 ? 'var(--success)' : 'var(--text-muted)'}}>
                 {Math.round(src.confidence * 100)}%
               </span>
             </div>
           ))}
         </div>
       </div>
-      
+
       {/* Timeline */}
-      <div className="detail-section">
-        <div className="section-title">Incident Timeline</div>
-        <div className="timeline">
-          {(uir.timeline || []).map((entry, i) => (
-            <div key={i} className="timeline-entry">
-              <div className="timeline-time">{entry.time}</div>
-              <div className="timeline-text">{entry.summary}</div>
-              <div className="timeline-source">
-                {entry.channel === 'voice' ? '📞' : '💬'} {entry.source}
+      {uir.timeline?.length > 0 && (
+        <div className="detail-section">
+          <div className="section-title">Incident Timeline</div>
+          <div className="timeline">
+            {uir.timeline.map((entry, i) => (
+              <div key={i} className="timeline-entry">
+                <div className="timeline-time">{entry.time}</div>
+                <div className="timeline-text">{entry.summary}</div>
+                <div className="timeline-source">
+                  {entry.channel === 'voice' ? '📞' : '💬'} {entry.source}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-      
+      )}
+
       {/* Linked UIRs */}
       {uir.linked_uirs?.length > 0 && (
         <div className="detail-section">
-          <div className="section-title">Linked Possible Duplicates</div>
+          <div className="section-title">🔗 Possible Duplicates</div>
           {uir.linked_uirs.map((id, i) => (
             <div key={i} style={{
-              fontSize: '12px',
-              padding: '4px 8px',
-              background: 'var(--bg-card)',
-              borderRadius: '4px',
-              marginBottom: '4px',
-              fontFamily: 'var(--font-mono)',
-              color: 'var(--high)',
+              fontSize:'12px', padding:'6px 8px', background:'var(--bg-card)',
+              borderRadius:'4px', marginBottom:'4px', fontFamily:'var(--font-mono)', color:'var(--high)',
+              border:'1px solid rgba(249,115,22,0.2)',
             }}>
-              🔗 {id}
+              {id}
             </div>
           ))}
         </div>
       )}
-      
-      {/* Operator Actions (Panel 4) */}
+
+      {/* Operator Actions */}
       <div className="detail-section">
         <div className="section-title">Operator Actions</div>
-        <div className="actions-bar">
-          <button className="action-btn confirm" onClick={() => onAction(uir.uir_id, 'confirm')}>
-            ✓ CONFIRM
+        <div className="actions-grid">
+          <button className="action-btn-v2 confirm" onClick={() => onAction(uir.uir_id, 'confirm')}>
+            <span className="btn-icon">✓</span>
+            <span className="btn-label">CONFIRM</span>
+            <span className="btn-desc">Mark as verified incident</span>
           </button>
-          <button className="action-btn" onClick={() => onAction(uir.uir_id, 'split')}>
-            ✂ SPLIT
+          <button className="action-btn-v2 split" onClick={() => onAction(uir.uir_id, 'split')}>
+            <span className="btn-icon">✂</span>
+            <span className="btn-label">SPLIT</span>
+            <span className="btn-desc">Separate merged reports</span>
           </button>
-          <button className="action-btn" onClick={() => onAction(uir.uir_id, 'merge')}>
-            ⊕ MERGE
+          <button className="action-btn-v2 merge" onClick={() => onAction(uir.uir_id, 'merge')}>
+            <span className="btn-icon">⊕</span>
+            <span className="btn-label">MERGE</span>
+            <span className="btn-desc">Combine with another UIR</span>
           </button>
-          <button className="action-btn" onClick={() => onAction(uir.uir_id, 'correct')}>
-            ✎ CORRECT
+          <button className="action-btn-v2 correct" onClick={() => onAction(uir.uir_id, 'correct')}>
+            <span className="btn-icon">✎</span>
+            <span className="btn-label">CORRECT</span>
+            <span className="btn-desc">Fix urgency / type / location</span>
           </button>
-          <button className="action-btn dismiss" onClick={() => onAction(uir.uir_id, 'dismiss')}>
-            ✕ DISMISS
+          <button className="action-btn-v2 dismiss full-width" onClick={() => onAction(uir.uir_id, 'dismiss')}>
+            <span className="btn-icon">✕</span>
+            <span className="btn-label">DISMISS</span>
+            <span className="btn-desc">Remove false positive</span>
           </button>
         </div>
       </div>
-      
+
       {/* Action Log */}
       {uir.operator_actions?.length > 0 && (
         <div className="detail-section">
           <div className="section-title">Action Log</div>
           {uir.operator_actions.map((action, i) => (
             <div key={i} style={{
-              fontSize: '11px', color: 'var(--text-muted)',
-              padding: '4px 0', borderBottom: '1px solid var(--border)',
-              fontFamily: 'var(--font-mono)',
+              fontSize:'11px', color:'var(--text-muted)', padding:'5px 0',
+              borderBottom:'1px solid var(--border)', fontFamily:'var(--font-mono)',
+              display:'flex', gap:'8px',
             }}>
-              [{action.timestamp?.substring(11,19) || '—'}] {action.action} by {action.operator_id}
+              <span style={{color:'var(--text-secondary)'}}>{action.timestamp?.substring(11,19) || '—'}</span>
+              <span style={{color:'var(--text-primary)', fontWeight:600}}>{action.action}</span>
+              <span>by {action.operator_id}</span>
             </div>
           ))}
         </div>
@@ -1011,22 +1314,20 @@ function MLPanel() {
             <span className="ml-kv-key">EXAMPLES</span>
             <span className="ml-kv-val">{status.similarity_model.n_examples}</span>
           </div>
-          {status.similarity_model.weights && (
-            <>
-              <div className="ml-kv">
-                <span className="ml-kv-key">W:SEMANTIC</span>
-                <span className="ml-kv-val">{status.similarity_model.weights[0]?.toFixed(3)}</span>
-              </div>
-              <div className="ml-kv">
-                <span className="ml-kv-key">W:GEO</span>
-                <span className="ml-kv-val">{status.similarity_model.weights[1]?.toFixed(3)}</span>
-              </div>
-              <div className="ml-kv">
-                <span className="ml-kv-key">W:TEMPORAL</span>
-                <span className="ml-kv-val">{status.similarity_model.weights[2]?.toFixed(3)}</span>
-              </div>
-            </>
-          )}
+          {status.similarity_model.weights && (<>
+            <div className="ml-kv">
+              <span className="ml-kv-key">W:SEMANTIC</span>
+              <span className="ml-kv-val">{status.similarity_model.weights[0]?.toFixed(3)}</span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">W:GEO</span>
+              <span className="ml-kv-val">{status.similarity_model.weights[1]?.toFixed(3)}</span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">W:TEMPORAL</span>
+              <span className="ml-kv-val">{status.similarity_model.weights[2]?.toFixed(3)}</span>
+            </div>
+          </>)}
         </div>
       )}
     </div>
@@ -1113,11 +1414,20 @@ function MapPanel({ uirs, selectedId, onSelect }) {
     });
   }, [uirs, selectedId, onSelect]);
   
+  const critical = uirs.filter(u => u.urgency === 'CRITICAL').length;
+  const flagged  = uirs.filter(u => u.flags?.length > 0).length;
+
   return (
     <div className="map-container">
       <div id="map" ref={mapRef}></div>
+      <div className="map-stats-overlay">
+        <div className="map-stat"><span style={{color:'var(--critical)'}}>●</span> {critical} CRITICAL</div>
+        <div className="map-stat"><span style={{color:'#60a5fa'}}>🌊</span> {uirs.filter(u=>u.incident_type==='flood').length} flood</div>
+        <div className="map-stat"><span style={{color:'var(--high)'}}>🔥</span> {uirs.filter(u=>u.incident_type==='fire').length} fire</div>
+        {flagged > 0 && <div className="map-stat"><span>⚠</span> {flagged} flagged</div>}
+      </div>
       <div className="map-legend">
-        <div style={{fontWeight: 600, marginBottom: '6px', color: '#e2e8f0', fontSize: '11px'}}>MAP LEGEND</div>
+        <div style={{fontWeight: 600, marginBottom: '6px', color: '#e2e8f0', fontSize: '11px'}}>LEGEND</div>
         {Object.entries(URGENCY_COLORS).map(([level, c]) => (
           <div key={level} className="legend-item">
             <div className="legend-dot" style={{background: c.color, borderColor: c.color}}></div>
@@ -1125,7 +1435,10 @@ function MapPanel({ uirs, selectedId, onSelect }) {
           </div>
         ))}
         <div className="legend-item" style={{marginTop: '4px'}}>
-          <span>⚠</span> Conflict / Review Required
+          <span>⚠</span> Has flags
+        </div>
+        <div className="legend-item">
+          <span style={{fontSize:'10px'}}>▲</span> Fire &nbsp;● Flood
         </div>
       </div>
     </div>
@@ -1142,7 +1455,14 @@ function App() {
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [rightTab, setRightTab] = useState('incident');
+  const [toasts, setToasts] = useState([]);
   const wsRef = useRef(null);
+
+  function showToast(msg, type = 'success') {
+    const id = Date.now();
+    setToasts(t => [...t, { id, msg, type }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000);
+  }
   
   // ── Load data: HTTP first (instant), then try WebSocket for live updates ──
   useEffect(() => {
@@ -1191,9 +1511,10 @@ function App() {
   }, []);
   
   // ── Operator Actions ────────────────────────────
+  const ACTION_LABELS = { confirm:'Confirmed', dismiss:'Dismissed', split:'Split', merge:'Merged', correct:'Corrected' };
   const handleAction = useCallback(async (uirId, actionType) => {
     try {
-      const res = await fetch(`/api/uirs/${uirId}/action`, {
+      await fetch(`/api/uirs/${uirId}/action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1202,13 +1523,13 @@ function App() {
           note: `${actionType} via dashboard`,
         }),
       });
-      
+      showToast(`${ACTION_LABELS[actionType] || actionType}: ${uirId}`);
       if (actionType === 'dismiss') {
         setUirs(prev => prev.filter(u => u.uir_id !== uirId));
         setSelectedUir(null);
       }
     } catch (err) {
-      console.error('Action failed:', err);
+      showToast('Action failed — check server', 'error');
     }
   }, []);
   
@@ -1232,14 +1553,41 @@ function App() {
     );
   }
   
+  const criticalCount = sortedUirs.filter(u => u.urgency === 'CRITICAL').length;
+
   return (
     <div>
-      <StatusBar
-        stats={stats}
-        uirCount={sortedUirs.length}
-        flaggedCount={flaggedCount}
-      />
-      <div className="dashboard-layout">
+      <StatusBar stats={stats} uirCount={sortedUirs.length} flaggedCount={flaggedCount} />
+
+      {/* Stats Strip */}
+      <div className="stats-strip">
+        <div className="stat-chip">
+          <span className="s-label">Critical</span>
+          <span className={`s-value ${criticalCount > 0 ? 'critical' : ''}`}>{criticalCount}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="s-label">🌊 Flood</span>
+          <span className="s-value flood">{stats.flood_uirs ?? '—'}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="s-label">🔥 Fire</span>
+          <span className="s-value fire">{stats.fire_uirs ?? '—'}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="s-label">Precision</span>
+          <span className="s-value success">{stats.precision != null ? `${(stats.precision*100).toFixed(1)}%` : '—'}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="s-label">Recall</span>
+          <span className="s-value">{stats.recall != null ? `${(stats.recall*100).toFixed(1)}%` : '—'}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="s-label">Total Reports</span>
+          <span className="s-value">{stats.total_reports ?? '—'}</span>
+        </div>
+      </div>
+
+      <div className="dashboard-layout" style={{height:'calc(100vh - 48px - 50px)'}}>
         <IncidentList
           uirs={sortedUirs}
           selectedId={selectedUir?.uir_id}
@@ -1272,6 +1620,15 @@ function App() {
             }
           </div>
         </div>
+      </div>
+
+      {/* Toast notifications */}
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.type}`}>
+            {t.type === 'success' ? '✓' : '✕'} {t.msg}
+          </div>
+        ))}
       </div>
     </div>
   );
