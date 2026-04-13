@@ -236,8 +236,8 @@
   /* ── RIGHT: DETAIL PANEL (Panel 3 & 4) ─────────── */
   .detail-panel {
     background: var(--bg-secondary);
-    border-left: 1px solid var(--border);
     overflow-y: auto;
+    height: 100%;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
   }
@@ -451,6 +451,98 @@
     color: var(--text-muted);
     border: 1px solid var(--border);
   }
+
+  /* ── RIGHT PANEL TABS ───────────────────────────────── */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+    background: var(--bg-secondary);
+    overflow: hidden;
+  }
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+    flex-shrink: 0;
+  }
+  .panel-tab {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 11px 8px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .panel-tab:hover { color: var(--text-primary); }
+  .panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .panel-tab-content { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+  /* ── ML PANEL ────────────────────────────────────────── */
+  .ml-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .ml-compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-top: 10px;
+  }
+  .ml-compare-table th {
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ml-compare-table th:first-child { text-align: left; }
+  .ml-compare-table td {
+    padding: 7px 6px;
+    border-bottom: 1px solid rgba(42,54,84,0.5);
+    color: var(--text-secondary);
+    text-align: right;
+  }
+  .ml-compare-table td:first-child { text-align: left; }
+  .ml-compare-table tr.best-row td { color: var(--text-primary); font-weight: 600; }
+  .ml-compare-table tr.best-row td:first-child { color: var(--accent); }
+  .auc-cell { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+  .auc-bar { height: 6px; border-radius: 3px; background: var(--accent); opacity: 0.7; transition: width 0.4s; }
+  .best-row .auc-bar { opacity: 1; }
+  .best-badge {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px;
+    background: rgba(59,130,246,0.15); color: var(--accent);
+    border: 1px solid rgba(59,130,246,0.3); margin-left: 4px;
+  }
+  .ml-run-btn {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.5px; padding: 8px 16px;
+    border: 1px solid rgba(59,130,246,0.4); border-radius: 4px;
+    background: rgba(59,130,246,0.08); color: var(--accent);
+    cursor: pointer; transition: all 0.15s; width: 100%; margin-top: 10px;
+  }
+  .ml-run-btn:hover:not(:disabled) { background: rgba(59,130,246,0.18); }
+  .ml-run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .fi-row { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+  .fi-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); width: 130px; flex-shrink: 0; }
+  .fi-bar { height: 5px; border-radius: 3px; background: var(--accent); opacity: 0.8; }
+  .fi-val { font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); }
+  .ml-kv { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(42,54,84,0.4); }
+  .ml-kv:last-child { border-bottom: none; }
+  .ml-kv-key { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .ml-kv-val { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-primary); }
+  .ml-kv-val.good { color: var(--success); }
+  .ml-kv-val.warn { color: var(--high); }
+  .ml-empty { padding: 32px 16px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
 </style>
 </head>
 <body>
@@ -736,6 +828,212 @@ function DetailPanel({ uir, onAction }) {
 }
 
 // ============================================================
+// ML MODELS PANEL
+// ============================================================
+function MLPanel() {
+  const [comparison, setComparison] = React.useState(null);
+  const [status, setStatus] = React.useState(null);
+  const [running, setRunning] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  async function loadData() {
+    try {
+      const [cmpRes, stRes] = await Promise.all([
+        fetch('/api/ml/compare'),
+        fetch('/api/ml/status'),
+      ]);
+      const cmp = await cmpRes.json();
+      const st = await stRes.json();
+      if (cmp.algorithms) setComparison(cmp);
+      setStatus(st);
+    } catch(e) { setError('Failed to load ML data'); }
+  }
+
+  React.useEffect(() => { loadData(); }, []);
+
+  async function runCompare() {
+    setRunning(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/ml/compare', { method: 'POST' });
+      const data = await res.json();
+      if (data.algorithms) setComparison(data);
+      await loadData();
+    } catch(e) { setError('Comparison failed'); }
+    setRunning(false);
+  }
+
+  const METHOD_LABELS = {
+    xgboost: 'XGBoost',
+    random_forest: 'Random Forest',
+    lightgbm: 'LightGBM',
+    gradientboost: 'GradientBoost',
+    logistic: 'Logistic Reg',
+  };
+
+  const algos = comparison?.algorithms ? Object.entries(comparison.algorithms) : [];
+  const bestMethod = comparison?.best;
+
+  return (
+    <div style={{height:'100%', overflowY:'auto', scrollbarWidth:'thin'}}>
+
+      {/* Active Model Status */}
+      <div className="ml-section">
+        <div className="section-title">Active Model</div>
+        {status ? (
+          <div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">ALGORITHM</span>
+              <span className="ml-kv-val" style={{color:'var(--accent)'}}>
+                {METHOD_LABELS[bestMethod] || bestMethod || status.ml_dedup?.metrics?.method || '—'}
+                {bestMethod && <span className="best-badge">LIVE</span>}
+              </span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">AUC-ROC</span>
+              <span className="ml-kv-val good">
+                {status.ml_dedup?.metrics?.auc_roc != null
+                  ? status.ml_dedup.metrics.auc_roc.toFixed(4) : '—'}
+              </span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">F1</span>
+              <span className="ml-kv-val">
+                {status.ml_dedup?.metrics?.f1 != null
+                  ? status.ml_dedup.metrics.f1.toFixed(4) : '—'}
+              </span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">PRECISION</span>
+              <span className="ml-kv-val">
+                {status.ml_dedup?.metrics?.precision != null
+                  ? status.ml_dedup.metrics.precision.toFixed(4) : '—'}
+              </span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">RECALL</span>
+              <span className="ml-kv-val">
+                {status.ml_dedup?.metrics?.recall != null
+                  ? status.ml_dedup.metrics.recall.toFixed(4) : '—'}
+              </span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">TRAINED</span>
+              <span className={`ml-kv-val ${status.ml_dedup?.trained ? 'good' : 'warn'}`}>
+                {status.ml_dedup?.trained ? 'YES' : 'NO'}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="ml-empty">Loading...</div>
+        )}
+      </div>
+
+      {/* Algorithm Comparison Table */}
+      <div className="ml-section">
+        <div className="section-title">Algorithm Comparison</div>
+        {algos.length > 0 ? (
+          <table className="ml-compare-table">
+            <thead>
+              <tr>
+                <th>Algorithm</th>
+                <th>AUC</th>
+                <th>F1</th>
+                <th>Prec</th>
+                <th>Recall</th>
+                <th>Secs</th>
+              </tr>
+            </thead>
+            <tbody>
+              {algos.map(([method, m]) => {
+                const isBest = method === bestMethod;
+                const aucPct = (m.auc_roc * 100).toFixed(0);
+                return (
+                  <tr key={method} className={isBest ? 'best-row' : ''}>
+                    <td>
+                      {METHOD_LABELS[method] || method}
+                      {isBest && <span className="best-badge">BEST</span>}
+                    </td>
+                    <td>
+                      <div className="auc-cell">
+                        <div className="auc-bar" style={{width: `${aucPct * 0.5}px`}}></div>
+                        {m.auc_roc.toFixed(4)}
+                      </div>
+                    </td>
+                    <td>{m.f1.toFixed(4)}</td>
+                    <td>{m.precision.toFixed(4)}</td>
+                    <td>{m.recall.toFixed(4)}</td>
+                    <td>{m.train_seconds != null ? m.train_seconds.toFixed(1)+'s' : '—'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="ml-empty" style={{padding:'16px 0', textAlign:'left', fontSize:'11px'}}>
+            No comparison data yet.
+          </div>
+        )}
+        {error && <div style={{color:'var(--critical)', fontSize:'11px', marginTop:'8px'}}>{error}</div>}
+        <button className="ml-run-btn" onClick={runCompare} disabled={running}>
+          {running ? '⟳ Running comparison...' : '▶ Re-run Comparison'}
+        </button>
+      </div>
+
+      {/* Feature Importance */}
+      {status?.ml_dedup?.metrics?.feature_importance && (
+        <div className="ml-section">
+          <div className="section-title">Feature Importance (Active Model)</div>
+          {Object.entries(status.ml_dedup.metrics.feature_importance)
+            .sort((a,b) => b[1]-a[1])
+            .map(([feat, imp]) => (
+              <div key={feat} className="fi-row">
+                <span className="fi-label">{feat}</span>
+                <div className="fi-bar" style={{width: `${Math.round(imp*180)}px`}}></div>
+                <span className="fi-val">{imp.toFixed(3)}</span>
+              </div>
+            ))
+          }
+        </div>
+      )}
+
+      {/* Operator Correction Model */}
+      {status?.similarity_model && (
+        <div className="ml-section">
+          <div className="section-title">Operator Correction Model (LR)</div>
+          <div className="ml-kv">
+            <span className="ml-kv-key">TRAINED</span>
+            <span className={`ml-kv-val ${status.similarity_model.trained ? 'good' : 'warn'}`}>
+              {status.similarity_model.trained ? 'YES' : `NO (need 20, have ${status.similarity_model.n_examples})`}
+            </span>
+          </div>
+          <div className="ml-kv">
+            <span className="ml-kv-key">EXAMPLES</span>
+            <span className="ml-kv-val">{status.similarity_model.n_examples}</span>
+          </div>
+          {status.similarity_model.weights && (
+            <>
+              <div className="ml-kv">
+                <span className="ml-kv-key">W:SEMANTIC</span>
+                <span className="ml-kv-val">{status.similarity_model.weights[0]?.toFixed(3)}</span>
+              </div>
+              <div className="ml-kv">
+                <span className="ml-kv-key">W:GEO</span>
+                <span className="ml-kv-val">{status.similarity_model.weights[1]?.toFixed(3)}</span>
+              </div>
+              <div className="ml-kv">
+                <span className="ml-kv-key">W:TEMPORAL</span>
+                <span className="ml-kv-val">{status.similarity_model.weights[2]?.toFixed(3)}</span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // MAP COMPONENT (Panel 1)
 // ============================================================
 function MapPanel({ uirs, selectedId, onSelect }) {
@@ -843,6 +1141,7 @@ function App() {
   const [stats, setStats] = useState({});
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [rightTab, setRightTab] = useState('incident');
   const wsRef = useRef(null);
   
   // ── Load data: HTTP first (instant), then try WebSocket for live updates ──
@@ -951,10 +1250,28 @@ function App() {
           selectedId={selectedUir?.uir_id}
           onSelect={setSelectedUir}
         />
-        <DetailPanel
-          uir={selectedUir}
-          onAction={handleAction}
-        />
+        <div className="right-panel">
+          <div className="panel-tabs">
+            <button
+              className={`panel-tab ${rightTab === 'incident' ? 'active' : ''}`}
+              onClick={() => setRightTab('incident')}
+            >
+              Incident
+            </button>
+            <button
+              className={`panel-tab ${rightTab === 'ml' ? 'active' : ''}`}
+              onClick={() => setRightTab('ml')}
+            >
+              ML Models
+            </button>
+          </div>
+          <div className="panel-tab-content">
+            {rightTab === 'incident'
+              ? <DetailPanel uir={selectedUir} onAction={handleAction} />
+              : <MLPanel />
+            }
+          </div>
+        </div>
       </div>
     </div>
   );

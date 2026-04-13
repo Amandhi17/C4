@@ -58,17 +58,15 @@ FEEDBACK_LOGGER = FeedbackLogger(ROOT / "data")
 SIMILARITY_MODEL = LearnedSimilarityModel(ROOT / "data")
 print(f"  {SIMILARITY_MODEL.status_line()}")
 
-# ML Deduplicator — train XGBoost on ground-truth pairs
+# ML Deduplicator — train all models and pick the best by AUC
 ML_DEDUP = init_deduplicator(ROOT / "data")
-if not ML_DEDUP.is_trained:
-    print("  Training ML deduplicator on ground-truth pairs...")
-    ML_DEDUP.train(embedded, method='auto')
-else:
-    print(f"  {ML_DEDUP.status_line()}")
+print("  Training ML deduplicator (XGBoost / Random Forest / LightGBM)...")
+ML_DEDUP.train_compare(embedded)
 
-# Inject XGBoost as the deduplication model
+# Inject the best model as the live deduplicator
 set_similarity_model(ML_DEDUP)
-print("  [Dedup] XGBoost active for deduplication")
+best = ML_DEDUP.comparison.get('best', 'unknown') if ML_DEDUP.comparison else 'unknown'
+print(f"  [Dedup] Best model active: {best}")
 
 # Keep reference for retraining
 EMBEDDED_REPORTS = embedded
