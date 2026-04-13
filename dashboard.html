@@ -25,18 +25,18 @@
     --text-primary: #e2e8f0;
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
-    --critical: #ef4444;
-    --critical-bg: rgba(239,68,68,0.12);
-    --critical-border: rgba(239,68,68,0.3);
-    --high: #f97316;
-    --high-bg: rgba(249,115,22,0.12);
-    --high-border: rgba(249,115,22,0.3);
-    --medium: #eab308;
-    --medium-bg: rgba(234,179,8,0.10);
-    --medium-border: rgba(234,179,8,0.25);
-    --low: #6b7280;
-    --low-bg: rgba(107,114,128,0.10);
-    --low-border: rgba(107,114,128,0.25);
+    --critical: #ff1744;
+    --critical-bg: rgba(255,23,68,0.13);
+    --critical-border: rgba(255,23,68,0.4);
+    --high: #ff6d00;
+    --high-bg: rgba(255,109,0,0.13);
+    --high-border: rgba(255,109,0,0.4);
+    --medium: #a855f7;
+    --medium-bg: rgba(168,85,247,0.13);
+    --medium-border: rgba(168,85,247,0.4);
+    --low: #06b6d4;
+    --low-bg: rgba(6,182,212,0.12);
+    --low-border: rgba(6,182,212,0.35);
     --accent: #3b82f6;
     --accent-glow: rgba(59,130,246,0.2);
     --success: #22c55e;
@@ -776,10 +776,10 @@ function timeAgo(iso) {
 // URGENCY COLORS
 // ============================================================
 const URGENCY_COLORS = {
-  CRITICAL: { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-  HIGH:     { color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
-  MEDIUM:   { color: '#eab308', bg: 'rgba(234,179,8,0.10)' },
-  LOW:      { color: '#6b7280', bg: 'rgba(107,114,128,0.10)' },
+  CRITICAL: { color: '#ff1744', bg: 'rgba(255,23,68,0.13)' },
+  HIGH:     { color: '#ff6d00', bg: 'rgba(255,109,0,0.13)' },
+  MEDIUM:   { color: '#a855f7', bg: 'rgba(168,85,247,0.13)' },
+  LOW:      { color: '#06b6d4', bg: 'rgba(6,182,212,0.12)' },
 };
 
 // ============================================================
@@ -927,7 +927,7 @@ function IncidentList({ uirs, selectedId, onSelect }) {
 // ============================================================
 // DETAIL PANEL (Panel 3 & 4)
 // ============================================================
-function DetailPanel({ uir, onAction }) {
+function DetailPanel({ uir, onAction, onSelectUir }) {
   if (!uir) {
     return (
       <div className="detail-panel">
@@ -941,7 +941,7 @@ function DetailPanel({ uir, onAction }) {
   }
 
   const confPct = Math.round((uir.confidence || 0) * 100);
-  const confColor = confPct > 70 ? 'var(--success)' : confPct > 50 ? '#eab308' : 'var(--critical)';
+  const confColor = confPct > 70 ? 'var(--success)' : confPct > 50 ? 'var(--medium)' : 'var(--critical)';
   const callCount = uir.sources?.filter(s => s.channel === 'voice').length || 0;
   const smsCount  = uir.sources?.filter(s => s.channel === 'sms').length || 0;
 
@@ -1066,12 +1066,21 @@ function DetailPanel({ uir, onAction }) {
         <div className="detail-section">
           <div className="section-title">🔗 Possible Duplicates</div>
           {uir.linked_uirs.map((id, i) => (
-            <div key={i} style={{
-              fontSize:'12px', padding:'6px 8px', background:'var(--bg-card)',
-              borderRadius:'4px', marginBottom:'4px', fontFamily:'var(--font-mono)', color:'var(--high)',
-              border:'1px solid rgba(249,115,22,0.2)',
-            }}>
-              {id}
+            <div
+              key={i}
+              onClick={() => onSelectUir(id)}
+              style={{
+                fontSize:'12px', padding:'8px 10px', background:'var(--bg-card)',
+                borderRadius:'6px', marginBottom:'6px', fontFamily:'var(--font-mono)',
+                color:'var(--accent)', border:'1px solid rgba(59,130,246,0.3)',
+                cursor:'pointer', display:'flex', alignItems:'center',
+                justifyContent:'space-between', transition:'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background='var(--bg-hover)'}
+              onMouseLeave={e => e.currentTarget.style.background='var(--bg-card)'}
+            >
+              <span>🔗 {id}</span>
+              <span style={{color:'var(--accent)'}}>→ Open</span>
             </div>
           ))}
         </div>
@@ -1615,7 +1624,7 @@ function App() {
           </div>
           <div className="panel-tab-content">
             {rightTab === 'incident'
-              ? <DetailPanel uir={selectedUir} onAction={handleAction} />
+              ? <DetailPanel uir={selectedUir} onAction={handleAction} onSelectUir={id => { const found = uirs.find(u => u.uir_id === id); if (found) { setSelectedUir(found); setRightTab('incident'); } }} />
               : <MLPanel />
             }
           </div>
