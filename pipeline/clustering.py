@@ -303,6 +303,8 @@ def create_uir(report: dict, event_date: str = None) -> dict:
             'lng': report.get('lng'),
             'resolved': report.get('lat') is not None,
             'source_strings': [report.get('location_raw', '')],
+            'resolution_method': report.get('location_resolved', {}).get('method', 'unknown'),
+            'geo_score': report.get('location_resolved', {}).get('score', 0),
         },
         'lat': report.get('lat'),
         'lng': report.get('lng'),

@@ -1362,84 +1362,156 @@ function MLPanel() {
   );
 }
 
+// ── Accuracy radius per resolution method (metres) ───────────────────────────
+const RESOLUTION_RADIUS = {
+  mapbox:                   150,
+  nominatim:                250,
+  exact:                    300,
+  address_city_exact:       400,
+  hierarchical_exact:       800,
+  fuzzy:                   1200,
+  landmark:                1400,
+  hierarchical_fuzzy:      1800,
+  hierarchical_landmark:   2000,
+  address_city_fuzzy:      2200,
+  unresolved:                 0,
+  none:                       0,
+  unknown:                 1500,
+};
+
+const RESOLUTION_LABEL = {
+  mapbox:              'Mapbox street-level',
+  nominatim:           'OSM street-level',
+  exact:               'GN exact match',
+  address_city_exact:  'Address → city exact',
+  hierarchical_exact:  'Hierarchical exact',
+  fuzzy:               'Fuzzy match (approx.)',
+  landmark:            'Landmark pattern (approx.)',
+  hierarchical_fuzzy:  'Hierarchical fuzzy (approx.)',
+  hierarchical_landmark:'Hierarchical landmark (approx.)',
+  address_city_fuzzy:  'Address → city fuzzy (approx.)',
+  unresolved:          'Unresolved',
+  none:                'No location',
+  unknown:             'Unknown',
+};
+
 // ============================================================
 // MAP COMPONENT (Panel 1)
 // ============================================================
 function MapPanel({ uirs, selectedId, onSelect }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
-  const markersRef = useRef({});
-  
-  // Initialize map
+  const layersRef = useRef({});   // stores { marker, circle } per uir_id
+
+  // Initialize map once
   useEffect(() => {
     if (mapInstance.current) return;
-    
+
     const map = L.map(mapRef.current, {
-      center: [7.0, 80.0],
+      center: [7.8, 80.7],
       zoom: 8,
       zoomControl: true,
     });
-    
-    // Dark tile layer
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
+
+    // Detailed tile layer — OpenStreetMap Humanitarian (good Sri Lanka coverage)
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap · Humanitarian OpenStreetMap Team',
       maxZoom: 19,
     }).addTo(map);
-    
+
+    // Scale bar
+    L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
+
     mapInstance.current = map;
-    
-    return () => {
-      map.remove();
-      mapInstance.current = null;
-    };
+    return () => { map.remove(); mapInstance.current = null; };
   }, []);
-  
-  // Update markers when UIRs change
+
+  // Update markers + circles whenever UIRs or selection changes
   useEffect(() => {
     if (!mapInstance.current) return;
     const map = mapInstance.current;
-    
-    // Remove old markers
-    Object.values(markersRef.current).forEach(m => map.removeLayer(m));
-    markersRef.current = {};
-    
-    // Add new markers
-    uirs.forEach(uir => {
-      if (!uir.location?.lat || !uir.location?.lng) return;
-      
-      const colors = URGENCY_COLORS[uir.urgency] || URGENCY_COLORS.LOW;
+
+    // Remove old layers
+    Object.values(layersRef.current).forEach(({ marker, circle }) => {
+      map.removeLayer(marker);
+      if (circle) map.removeLayer(circle);
+    });
+    layersRef.current = {};
+
+    const validUirs = uirs.filter(u => u.location?.lat && u.location?.lng);
+
+    validUirs.forEach(uir => {
+      const colors   = URGENCY_COLORS[uir.urgency] || URGENCY_COLORS.LOW;
       const isSelected = uir.uir_id === selectedId;
-      const hasConflict = uir.flags?.length > 0;
-      const isFire = uir.incident_type === 'fire';
-      const size = isSelected ? 16 : (uir.urgency === 'CRITICAL' ? 12 : 10);
-      const shape = isFire ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : '50%';
-      
+      const isFire   = uir.incident_type === 'fire';
+      const hasFlag  = uir.flags?.length > 0;
+      const size     = isSelected ? 18 : (uir.urgency === 'CRITICAL' ? 14 : 11);
+      const markerColor = isFire ? '#ff6d00' : colors.color;
+
+      // Accuracy circle
+      const method = uir.location?.resolution_method || 'unknown';
+      const radius = RESOLUTION_RADIUS[method] || 1500;
+      let circle = null;
+      if (radius > 0) {
+        const isApprox = radius > 500;
+        circle = L.circle([uir.location.lat, uir.location.lng], {
+          radius,
+          color: markerColor,
+          fillColor: markerColor,
+          fillOpacity: isApprox ? 0.04 : 0.07,
+          opacity: isApprox ? 0.25 : 0.45,
+          weight: isApprox ? 1 : 1.5,
+          dashArray: isApprox ? '5,5' : null,
+        }).addTo(map);
+      }
+
+      // Marker icon
       const icon = L.divIcon({
         className: '',
         html: `<div style="
-          width: ${size}px;
-          height: ${size}px;
-          background: ${isFire ? '#f97316' : colors.color};
-          ${isFire ? 'clip-path: polygon(50% 0%, 0% 100%, 100% 100%);' : 'border-radius: 50%;'}
-          border: 2px solid ${isSelected ? '#fff' : 'rgba(255,255,255,0.3)'};
-          box-shadow: 0 0 ${isSelected ? 12 : 6}px ${isFire ? '#f97316' : colors.color};
-          ${uir.urgency === 'CRITICAL' ? 'animation: pulse-dot 1.5s infinite;' : ''}
-          position: relative;
-        ">${hasConflict ? '<span style="position:absolute;top:-6px;right:-6px;font-size:10px;">⚠</span>' : ''}</div>`,
+          width:${size}px; height:${size}px;
+          background:${markerColor};
+          ${isFire ? 'clip-path:polygon(50% 0%,0% 100%,100% 100%);' : 'border-radius:50%;'}
+          border:2px solid ${isSelected ? '#fff' : 'rgba(255,255,255,0.4)'};
+          box-shadow:0 0 ${isSelected ? 14 : 7}px ${markerColor};
+          ${uir.urgency === 'CRITICAL' ? 'animation:pulse-dot 1.5s infinite;' : ''}
+          position:relative;
+        ">${hasFlag ? '<span style="position:absolute;top:-7px;right:-7px;font-size:11px;line-height:1;">⚠</span>' : ''}</div>`,
         iconSize: [size, size],
         iconAnchor: [size/2, size/2],
       });
-      
+
+      // Tooltip
+      const resLabel = RESOLUTION_LABEL[method] || method;
+      const geoScore = uir.location?.geo_score;
+      const tooltipHtml = `
+        <b>${uir.location.display_name}</b><br>
+        ${isFire ? '🔥 FIRE' : '🌊 FLOOD'} · <b>${uir.urgency}</b> · ${uir.source_count} source${uir.source_count !== 1 ? 's' : ''}<br>
+        <span style="color:#94a3b8;font-size:10px">📍 ${resLabel}${geoScore ? ` (score ${geoScore})` : ''}</span><br>
+        <span style="color:#94a3b8;font-size:10px">±${radius >= 1000 ? (radius/1000).toFixed(1)+'km' : radius+'m'} accuracy</span>
+      `;
+
       const marker = L.marker([uir.location.lat, uir.location.lng], { icon })
         .addTo(map)
-        .bindTooltip(`<b>${uir.location.display_name}</b><br>${uir.incident_type === 'fire' ? '🔥 FIRE' : '🌊 FLOOD'} · ${uir.urgency} · ${uir.source_count} sources`, {
-          className: 'dark-tooltip',
-          direction: 'top',
-        })
+        .bindTooltip(tooltipHtml, { className: 'dark-tooltip', direction: 'top' })
         .on('click', () => onSelect(uir));
-      
-      markersRef.current[uir.uir_id] = marker;
+
+      layersRef.current[uir.uir_id] = { marker, circle };
     });
+
+    // Auto-fit to all markers when data loads
+    if (validUirs.length > 0 && !selectedId) {
+      const bounds = L.latLngBounds(validUirs.map(u => [u.location.lat, u.location.lng]));
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+    }
+
+    // Pan to selected marker
+    if (selectedId) {
+      const sel = uirs.find(u => u.uir_id === selectedId);
+      if (sel?.location?.lat) {
+        map.panTo([sel.location.lat, sel.location.lng], { animate: true });
+      }
+    }
   }, [uirs, selectedId, onSelect]);
   
   const critical = uirs.filter(u => u.urgency === 'CRITICAL').length;
@@ -1455,18 +1527,27 @@ function MapPanel({ uirs, selectedId, onSelect }) {
         {flagged > 0 && <div className="map-stat"><span>⚠</span> {flagged} flagged</div>}
       </div>
       <div className="map-legend">
-        <div style={{fontWeight: 600, marginBottom: '6px', color: '#e2e8f0', fontSize: '11px'}}>LEGEND</div>
+        <div style={{fontWeight:600, marginBottom:'6px', color:'#e2e8f0', fontSize:'11px'}}>LEGEND</div>
         {Object.entries(URGENCY_COLORS).map(([level, c]) => (
           <div key={level} className="legend-item">
-            <div className="legend-dot" style={{background: c.color, borderColor: c.color}}></div>
+            <div className="legend-dot" style={{background:c.color, borderColor:c.color}}></div>
             {level}
           </div>
         ))}
-        <div className="legend-item" style={{marginTop: '4px'}}>
-          <span>⚠</span> Has flags
+        <div className="legend-item" style={{marginTop:'6px', borderTop:'1px solid #2a3654', paddingTop:'6px'}}>
+          <span>▲</span> Fire &nbsp; <span>●</span> Flood
         </div>
-        <div className="legend-item">
-          <span style={{fontSize:'10px'}}>▲</span> Fire &nbsp;● Flood
+        <div className="legend-item"><span>⚠</span> Has flags</div>
+        <div style={{marginTop:'6px', borderTop:'1px solid #2a3654', paddingTop:'6px', fontSize:'10px', color:'#64748b'}}>
+          <div style={{marginBottom:'3px', fontWeight:600}}>ACCURACY CIRCLE</div>
+          <div style={{display:'flex', alignItems:'center', gap:'6px', marginBottom:'2px'}}>
+            <div style={{width:'20px', height:'2px', background:'rgba(100,200,100,0.6)', borderBottom:'2px solid rgba(100,200,100,0.6)'}}></div>
+            Street-level (≤250m)
+          </div>
+          <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
+            <div style={{width:'20px', height:'2px', borderBottom:'2px dashed rgba(150,150,150,0.5)'}}></div>
+            Approx. (&gt;500m)
+          </div>
         </div>
       </div>
     </div>
