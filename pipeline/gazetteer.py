@@ -10,17 +10,17 @@ Resolution chain — each stage catches what the previous missed:
   B:   Fuzzy match        — handles typos / transliteration variants
   C:   Landmark pattern   — "near X bridge", "X bridge ළඟ"
   D:   Hierarchical parse — splits "Kelaniya, Gonawala, Yakkala Road ළඟ"
-  E:   Google Maps API    — street-level, full formatted address, Sinhala/Tamil
-                            aware. Set GOOGLE_MAPS_API_KEY to enable.
-  E.5: Nominatim fallback — OpenStreetMap geocoding when no Google key is set.
-                            Rate-limited 1 req/sec, cached locally.
+  E:   Mapbox Geocoding API — street-level, full formatted address.
+                              Token hardcoded; 100k req/month free.
+  E.5: Nominatim fallback   — OpenStreetMap geocoding if Mapbox fails.
+                              Rate-limited 1 req/sec, cached locally.
   F:   Unresolved         — geo_score = 0, flagged for operator review
 
 Data sources:
   - 31 town/city entries (original hand-curated, backward-compatible)
   - 4,258 GN Division centroids extracted from lka_admin4.geojson
-  - Google Maps Geocoding API (GOOGLE_MAPS_API_KEY env var, recommended)
-  - OpenStreetMap Nominatim (free fallback, no key needed)
+  - Mapbox Geocoding API (token hardcoded, 100k req/month free)
+  - OpenStreetMap Nominatim (fallback if Mapbox fails, no key needed)
 
 Coverage target: >97% of reports resolve to lat/lng.
 """
@@ -364,161 +364,7 @@ def _save_geocoding_cache():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# STAGE E: GOOGLE MAPS GEOCODING API  (primary — set GOOGLE_MAPS_API_KEY)
-# ═══════════════════════════════════════════════════════════════════════════════
-#
-# Why Google Maps over Nominatim:
-#   • Returns the EXACT address, not just a place-name centroid
-#   • Full formatted address:  "No 45/B, Kandy Road, Kelaniya, Western Province, Sri Lanka"
-#   • Street-level lat/lng (precision ~10 m vs ~500 m for town centroid)
-#   • Native Sinhala + Tamil Unicode understanding
-#   • Structured address components: street, locality, district, province separately
-#   • Much higher accuracy for rural/suburban Sri Lanka than OpenStreetMap
-#
-# Set GOOGLE_MAPS_API_KEY environment variable to enable.
-# Free tier: 40,000 requests/month.  For 800 reports, cost = $0.
-# ═══════════════════════════════════════════════════════════════════════════════
-
-_GMAPS_API_KEY: Optional[str] = os.environ.get("GOOGLE_MAPS_API_KEY")
-_GMAPS_BASE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
-
-
-def _parse_gmaps_components(components: list) -> dict:
-    """
-    Extract district and province from Google Maps address_components list.
-    Google returns typed components — we pick the right administrative levels.
-
-    Sri Lanka structure:
-      administrative_area_level_1 → Province  (e.g. "Western Province")
-      administrative_area_level_2 → District  (e.g. "Colombo District")
-      locality / sublocality      → Town/City (e.g. "Kelaniya")
-    """
-    mapping = {}
-    for comp in components:
-        types = comp.get("types", [])
-        name = comp.get("long_name", "")
-        if "administrative_area_level_1" in types:
-            mapping["province"] = name.replace(" Province", "").strip()
-        elif "administrative_area_level_2" in types:
-            mapping["district"] = name.replace(" District", "").strip()
-        elif "locality" in types and "locality" not in mapping:
-            mapping["locality"] = name
-        elif "sublocality_level_1" in types and "locality" not in mapping:
-            mapping["locality"] = name
-        elif "route" in types:
-            mapping["route"] = name
-        elif "street_number" in types:
-            mapping["street_number"] = name
-    return mapping
-
-
-def google_maps_resolve(text: str, db=None) -> Optional[dict]:
-    """
-    Geocode using Google Maps Geocoding API.
-
-    Returns a result dict with:
-      - Precise street-level lat/lng
-      - Full formatted address from Google
-      - Structured district + province
-      - Confidence score = 95 (higher than Nominatim's 85)
-
-    Results are cached in data/geocoding_cache.json so each unique
-    location string is only looked up once.
-
-    Requires GOOGLE_MAPS_API_KEY environment variable.
-    Falls back silently if key is not set or request fails.
-    """
-    if not _GMAPS_API_KEY:
-        return None
-    if not text or not text.strip():
-        return None
-
-    cache_key = f"gmaps:{text.lower().strip()}"
-
-    # Check DB cache
-    if db is not None:
-        try:
-            cached = db.get_nominatim_cache(cache_key)
-            if cached:
-                return cached
-        except Exception:
-            pass
-
-    # Check memory/disk cache
-    if cache_key in _GEO_CACHE:
-        return _GEO_CACHE[cache_key]
-
-    try:
-        import requests
-        params = {
-            "address": f"{text}, Sri Lanka",
-            "key": _GMAPS_API_KEY,
-            "region": "lk",          # bias results toward Sri Lanka
-            "language": "en",         # return address in English for consistency
-            "components": "country:LK",
-        }
-        resp = requests.get(_GMAPS_BASE_URL, params=params, timeout=5)
-        data = resp.json()
-
-        if data.get("status") != "OK" or not data.get("results"):
-            _GEO_CACHE[cache_key] = None
-            _save_geocoding_cache()
-            return None
-
-        top = data["results"][0]
-        loc = top["geometry"]["location"]
-        components = _parse_gmaps_components(top.get("address_components", []))
-        formatted = top.get("formatted_address", text)
-
-        # Precision score: ROOFTOP > RANGE_INTERPOLATED > GEOMETRIC_CENTER > APPROXIMATE
-        precision_scores = {
-            "ROOFTOP": 97,
-            "RANGE_INTERPOLATED": 93,
-            "GEOMETRIC_CENTER": 88,
-            "APPROXIMATE": 80,
-        }
-        location_type = top.get("geometry", {}).get("location_type", "APPROXIMATE")
-        score = precision_scores.get(location_type, 85)
-
-        result = _make_result(
-            canonical_name=formatted,
-            entry={
-                "lat": loc["lat"],
-                "lng": loc["lng"],
-                "district": components.get("district", ""),
-                "province": components.get("province", ""),
-            },
-            method="google_maps",
-            score=score,
-            flag="google_maps_location",
-            formatted_address=formatted,
-            location_type=location_type,
-            locality=components.get("locality", ""),
-            route=components.get("route", ""),
-        )
-
-        _GEO_CACHE[cache_key] = result
-        _save_geocoding_cache()
-
-        if db is not None:
-            try:
-                db.set_nominatim_cache(cache_key, result)
-            except Exception:
-                pass
-
-        return result
-
-    except ImportError:
-        pass
-    except Exception:
-        pass
-
-    _GEO_CACHE[cache_key] = None
-    return None
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# STAGE E.5: NOMINATIM FALLBACK  (used when no Google Maps API key is set)
+# STAGE E.5: NOMINATIM FALLBACK  (used when Mapbox fails or is unavailable)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 _NOM_LAST_REQUEST: float = 0.0
@@ -529,7 +375,7 @@ def nominatim_resolve(text: str, db=None) -> Optional[dict]:
     """
     Query OpenStreetMap Nominatim for street-level resolution.
     Rate-limited to 1 req/sec per ToS.  Results cached in memory + disk.
-    Used as fallback when GOOGLE_MAPS_API_KEY is not set.
+    Used as fallback when Mapbox fails or is unavailable.
     """
     global _NOM_LAST_REQUEST
     if not _NOM_ENABLED or not text or not text.strip():
@@ -589,6 +435,139 @@ def nominatim_resolve(text: str, db=None) -> Optional[dict]:
                     pass
 
             return result
+    except ImportError:
+        pass
+    except Exception:
+        pass
+
+    _GEO_CACHE[cache_key] = None
+    return None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STAGE E.6: MAPBOX GEOCODING  (used when MAPBOX_ACCESS_TOKEN is set)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_MAPBOX_TOKEN: Optional[str] = os.environ.get("MAPBOX_ACCESS_TOKEN")
+_MAPBOX_BASE_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json"
+
+
+def mapbox_resolve(text: str, db=None) -> Optional[dict]:
+    """
+    Geocode using Mapbox Geocoding API.
+
+    Returns a result dict with:
+      - Street-level lat/lng
+      - Full formatted place name
+      - District + province extracted from context array
+      - Confidence score derived from Mapbox relevance (0.0–1.0 → scaled to 50–95)
+
+    Skips native Sinhala/Tamil script inputs — Mapbox doesn't understand them,
+    and routing them here wastes an API call. The local gazetteer (stages A-D)
+    and Nominatim handle those better.
+
+    Results cached in data/geocoding_cache.json.
+    """
+    if not _MAPBOX_TOKEN:
+        return None
+    if not text or not text.strip():
+        return None
+
+    # Mapbox does not understand native Sinhala or Tamil script — skip it.
+    # Sinhala: U+0D80–U+0DFF  |  Tamil: U+0B80–U+0BFF
+    if re.search(r'[\u0D80-\u0DFF\u0B80-\u0BFF]', text):
+        return None
+
+    cache_key = f"mapbox:{text.lower().strip()}"
+
+    if db is not None:
+        try:
+            cached = db.get_nominatim_cache(cache_key)
+            if cached:
+                return cached
+        except Exception:
+            pass
+
+    if cache_key in _GEO_CACHE:
+        return _GEO_CACHE[cache_key]
+
+    try:
+        import requests
+        from urllib.parse import quote
+
+        url = _MAPBOX_BASE_URL.format(query=quote(f"{text}, Sri Lanka"))
+        params = {
+            "access_token": _MAPBOX_TOKEN,
+            "country": "lk",
+            "limit": 1,
+            "language": "en",
+            # Bias results toward Sri Lanka geographic centre
+            "proximity": "80.7718,7.8731",
+            # Bounding box: roughly the extent of Sri Lanka
+            "bbox": "79.6951,5.9167,81.8818,9.8358",
+        }
+        resp = requests.get(url, params=params, timeout=5)
+        data = resp.json()
+
+        features = data.get("features", [])
+        if not features:
+            _GEO_CACHE[cache_key] = None
+            _save_geocoding_cache()
+            return None
+
+        feat = features[0]
+
+        # Use Mapbox relevance (0.0–1.0) for dynamic scoring.
+        # relevance < 0.5 means Mapbox isn't confident — reject it so
+        # Nominatim gets a chance at a better result.
+        relevance = feat.get("relevance", 0.0)
+        if relevance < 0.5:
+            _GEO_CACHE[cache_key] = None
+            _save_geocoding_cache()
+            return None
+
+        # Scale relevance to a score in the range 60–95
+        score = round(60 + relevance * 35, 1)
+
+        lng, lat = feat["center"]
+        formatted = feat.get("place_name", text)
+
+        # Extract district and province from context array
+        district = ""
+        province = ""
+        locality = ""
+        for ctx in feat.get("context", []):
+            ctx_id = ctx.get("id", "")
+            ctx_text = ctx.get("text", "")
+            if ctx_id.startswith("region."):
+                province = ctx_text.replace(" Province", "").strip()
+            elif ctx_id.startswith("district."):
+                district = ctx_text.replace(" District", "").strip()
+            elif ctx_id.startswith("place."):
+                locality = ctx_text
+
+        result = _make_result(
+            canonical_name=formatted,
+            entry={"lat": lat, "lng": lng, "district": district, "province": province},
+            method="mapbox",
+            score=score,
+            flag="mapbox_location",
+            formatted_address=formatted,
+            locality=locality,
+            relevance=relevance,
+        )
+
+        _GEO_CACHE[cache_key] = result
+        _save_geocoding_cache()
+
+        if db is not None:
+            try:
+                db.set_nominatim_cache(cache_key, result)
+            except Exception:
+                pass
+
+        return result
+
     except ImportError:
         pass
     except Exception:
@@ -691,8 +670,8 @@ def resolve_location(text: str, use_nominatim: bool = False, db=None) -> dict:
       B:   Fuzzy match
       C:   Landmark pattern
       D:   Hierarchical parse
-      E:   Google Maps Geocoding API  (if GOOGLE_MAPS_API_KEY is set)
-      E.5: Nominatim fallback         (if no Google key, or Google failed)
+      E:   Mapbox Geocoding API
+      E.5: Nominatim fallback         (if Mapbox fails or use_nominatim=True)
       F:   Unresolved
     """
     if not text or not text.strip():
@@ -706,10 +685,10 @@ def resolve_location(text: str, use_nominatim: bool = False, db=None) -> dict:
 
     # Stage A.5: Address fast-path
     # Strings like "No 45/B, Kandy Road, Kelaniya" will never match fuzzy or
-    # landmark stages. Route them to Google Maps (or Nominatim) for precise
+    # landmark stages. Route them to Mapbox (or Nominatim) for precise
     # street-level resolution. Results are cached — no slowdown after first run.
     if _is_address_string(text):
-        geo = google_maps_resolve(text, db=db) or nominatim_resolve(text, db=db)
+        geo = mapbox_resolve(text, db=db) or nominatim_resolve(text, db=db)
         if geo:
             return geo
         # Both APIs offline/failed — extract city portion and resolve that
@@ -752,17 +731,17 @@ def resolve_location(text: str, use_nominatim: bool = False, db=None) -> dict:
         if hp:
             return hp
 
-    # Stage E: Google Maps (for place names that passed all local stages)
-    if _GMAPS_API_KEY:
-        geo = google_maps_resolve(text, db=db)
-        if geo:
-            return geo
+    # Stage E: Mapbox Geocoding API
+    geo = mapbox_resolve(text, db=db)
+    if geo:
+        return geo
 
-    # Stage E.5: Nominatim fallback (opt-in, used when no Google key or Google failed)
-    if use_nominatim or not _GMAPS_API_KEY:
-        nom = nominatim_resolve(text, db=db)
-        if nom:
-            return nom
+    # Stage E.5: Nominatim fallback — always tried when Mapbox returns nothing.
+    # Nominatim has strong Sri Lanka GN-division coverage and handles cases
+    # Mapbox rejects (low relevance, native script, rural areas).
+    nom = nominatim_resolve(text, db=db)
+    if nom:
+        return nom
 
     # Stage F: Unresolved
     return dict(_UNRESOLVED)
@@ -793,7 +772,7 @@ def resolve_batch(reports: list, use_nominatim: bool = False, db=None) -> list:
 _gn_count = _build_index()
 _load_geocoding_cache()
 
-_geo_source = "Google Maps" if _GMAPS_API_KEY else "Nominatim (OSM)"
+_geo_source = "Mapbox" if _MAPBOX_TOKEN else "Nominatim (OSM)"
 if _gn_count > 0:
     print(f"  [Gazetteer] {len(GAZETTEER)} entries ({31} towns + {_gn_count} GN variants) | geocoder: {_geo_source}")
 else:

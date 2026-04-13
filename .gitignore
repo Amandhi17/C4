@@ -2,3 +2,4 @@ venv/
 labse_model/
 .claude
 CLAUDE.md
+.env

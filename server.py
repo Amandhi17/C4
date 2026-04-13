@@ -9,13 +9,20 @@ from collections import Counter
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
 
+# Load .env before any pipeline imports so env vars are available at module level
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / ".env")
+except ImportError:
+    pass  # python-dotenv not installed — rely on shell environment
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from pipeline.normalizer import normalize_batch, reset_counters
-from pipeline.gazetteer import resolve_batch, _GMAPS_API_KEY
+from pipeline.gazetteer import resolve_batch, _MAPBOX_TOKEN
 from pipeline.embedder import embed_batch
 from pipeline.clustering import (
     IncidentClusterEngine, evaluate_clustering,
@@ -286,9 +293,9 @@ async def ml_status():
             "n_examples": SIMILARITY_MODEL.n_examples,
         },
         "geocoding": {
-            "provider": "google_maps" if _GMAPS_API_KEY else "nominatim",
-            "google_maps_enabled": bool(_GMAPS_API_KEY),
-            "note": "Set GOOGLE_MAPS_API_KEY env var to enable Google Maps geocoding",
+            "provider": "mapbox" if _MAPBOX_TOKEN else "nominatim",
+            "mapbox_enabled": bool(_MAPBOX_TOKEN),
+            "note": "Set MAPBOX_ACCESS_TOKEN in .env to enable Mapbox geocoding",
         },
         "database": {
             "connected": DB.connected if DB else False,
