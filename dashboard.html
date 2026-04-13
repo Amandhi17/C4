@@ -964,11 +964,15 @@ function DetailPanel({ uir, onAction, onSelectUir }) {
         <div className="detail-section" style={{background:'rgba(249,115,22,0.04)'}}>
           <div className="section-title" style={{color:'var(--high)'}}>⚠ Flags Requiring Review</div>
           <div className="flags-container">
-            {uir.flags.map((flag, i) => (
-              <span key={i} className={`flag-tag ${flag.includes('operator') ? 'critical-flag' : ''}`}>
-                {flag.replace(/_/g,' ')}
-              </span>
-            ))}
+            {uir.flags.map((flag, i) => {
+              const isAutoMerged = flag === 'auto_merged';
+              return (
+                <span key={i} className={`flag-tag ${flag.includes('operator') || isAutoMerged ? 'critical-flag' : ''}`}
+                  style={isAutoMerged ? {background:'rgba(59,130,246,0.12)', color:'var(--accent)', borderColor:'rgba(59,130,246,0.3)'} : {}}>
+                  {isAutoMerged ? '⚡ AUTO-MERGED (score ≥ 82%)' : flag.replace(/_/g,' ')}
+                </span>
+              );
+            })}
           </div>
         </div>
       )}
@@ -1064,25 +1068,40 @@ function DetailPanel({ uir, onAction, onSelectUir }) {
       {/* Linked UIRs */}
       {uir.linked_uirs?.length > 0 && (
         <div className="detail-section">
-          <div className="section-title">🔗 Possible Duplicates</div>
-          {uir.linked_uirs.map((id, i) => (
-            <div
-              key={i}
-              onClick={() => onSelectUir(id)}
-              style={{
-                fontSize:'12px', padding:'8px 10px', background:'var(--bg-card)',
-                borderRadius:'6px', marginBottom:'6px', fontFamily:'var(--font-mono)',
-                color:'var(--accent)', border:'1px solid rgba(59,130,246,0.3)',
-                cursor:'pointer', display:'flex', alignItems:'center',
-                justifyContent:'space-between', transition:'background 0.15s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background='var(--bg-hover)'}
-              onMouseLeave={e => e.currentTarget.style.background='var(--bg-card)'}
-            >
-              <span>🔗 {id}</span>
-              <span style={{color:'var(--accent)'}}>→ Open</span>
-            </div>
-          ))}
+          <div className="section-title">🔗 Possible Duplicates
+            <span style={{color:'var(--text-muted)', fontWeight:400, marginLeft:'6px', fontSize:'9px'}}>
+              score &lt; 0.82 — not auto-merged
+            </span>
+          </div>
+          {uir.linked_uirs.map((id, i) => {
+            const score = uir.linked_uir_scores?.[id];
+            const scoreColor = score >= 0.75 ? 'var(--high)' : score >= 0.60 ? 'var(--medium)' : 'var(--text-muted)';
+            return (
+              <div
+                key={i}
+                onClick={() => onSelectUir(id)}
+                style={{
+                  fontSize:'12px', padding:'8px 10px', background:'var(--bg-card)',
+                  borderRadius:'6px', marginBottom:'6px', fontFamily:'var(--font-mono)',
+                  color:'var(--accent)', border:'1px solid rgba(59,130,246,0.25)',
+                  cursor:'pointer', display:'flex', alignItems:'center',
+                  justifyContent:'space-between', gap:'8px', transition:'background 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background='var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background='var(--bg-card)'}
+              >
+                <span>🔗 {id}</span>
+                <span style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                  {score != null && (
+                    <span style={{color: scoreColor, fontSize:'11px', fontWeight:700}}>
+                      score {(score * 100).toFixed(0)}%
+                    </span>
+                  )}
+                  <span style={{color:'var(--accent)'}}>→ Open</span>
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
 

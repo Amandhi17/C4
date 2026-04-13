@@ -46,6 +46,10 @@ NON_CRITICAL_GATE = {
     'require_type_match': False,
 }
 
+# If similarity score >= this threshold, force-merge even if safety gate blocked,
+# and mark with 'auto_merged' flag. Below this → keep as possible duplicate.
+AUTO_MERGE_THRESHOLD = 0.82
+
 
 # ============================================================
 # SIMILARITY FUNCTIONS
@@ -325,6 +329,7 @@ def create_uir(report: dict, event_date: str = None) -> dict:
         'timeline': [],
         'flags': list(report.get('flags', [])),
         'linked_uirs': [],
+        'linked_uir_scores': {},
         'status': 'active',
         'created_at': report.get('timestamp', report.get('receive_time')),
         'last_updated': report.get('timestamp', report.get('receive_time')),
@@ -603,18 +608,30 @@ class IncidentClusterEngine:
                 self.stats['merges'] += 1
                 return best_uir
             else:
-                # Safety gate blocked merge — create new UIR, link as possible duplicate
-                new_uir = create_uir(report)
-                new_uir['linked_uirs'].append(best_uir['uir_id'])
-                new_uir['flags'].append('operator_review_required')
-                best_uir['linked_uirs'].append(new_uir['uir_id'])
-                if 'possible_duplicate_nearby' not in best_uir['flags']:
-                    best_uir['flags'].append('possible_duplicate_nearby')
-                self.active_uirs.append(new_uir)
-                self.stats['blocked_merges'] += 1
-                self.stats['new_uirs'] += 1
-                self.stats['possible_duplicates'] += 1
-                return new_uir
+                score = best_sim['combined']
+                if score >= AUTO_MERGE_THRESHOLD:
+                    # High confidence despite safety gate failure — force merge
+                    conflicts = detect_conflicts(best_uir, report)
+                    merge_into_uir(best_uir, report, conflicts)
+                    if 'auto_merged' not in best_uir['flags']:
+                        best_uir['flags'].append('auto_merged')
+                    self.stats['merges'] += 1
+                    return best_uir
+                else:
+                    # Below auto-merge threshold — create new UIR, link as possible duplicate
+                    new_uir = create_uir(report)
+                    new_uir['linked_uirs'].append(best_uir['uir_id'])
+                    new_uir['linked_uir_scores'][best_uir['uir_id']] = round(score, 4)
+                    new_uir['flags'].append('operator_review_required')
+                    best_uir['linked_uirs'].append(new_uir['uir_id'])
+                    best_uir['linked_uir_scores'][new_uir['uir_id']] = round(score, 4)
+                    if 'possible_duplicate_nearby' not in best_uir['flags']:
+                        best_uir['flags'].append('possible_duplicate_nearby')
+                    self.active_uirs.append(new_uir)
+                    self.stats['blocked_merges'] += 1
+                    self.stats['new_uirs'] += 1
+                    self.stats['possible_duplicates'] += 1
+                    return new_uir
         else:
             # No match — create new UIR
             new_uir = create_uir(report)

@@ -102,7 +102,7 @@ def serialize_uir(uir):
         "confidence": uir["confidence"], "source_count": uir["source_count"],
         "sources": [{"id":s["id"],"channel":s["channel"],"time":safe_iso(s["time"]),"confidence":s["confidence"]} for s in uir["sources"][:10]],
         "timeline": uir["timeline"][:10], "flags": uir["flags"],
-        "linked_uirs": uir["linked_uirs"], "status": uir["status"],
+        "linked_uirs": uir["linked_uirs"], "linked_uir_scores": uir.get("linked_uir_scores", {}), "status": uir["status"],
         "created_at": safe_iso(uir["created_at"]), "last_updated": safe_iso(uir["last_updated"]),
         "operator_actions": uir.get("operator_actions", []),
     }
