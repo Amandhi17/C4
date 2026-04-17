@@ -92,6 +92,26 @@ print("=" * 55)
 def safe_iso(v):
     return v.isoformat() if hasattr(v, "isoformat") else str(v) if v else None
 
+def _enrich_sources(uir):
+    report_map = {r["source_id"]: r for r in uir.get("source_reports", [])}
+    result = []
+    for s in uir["sources"][:10]:
+        r = report_map.get(s["id"], {})
+        result.append({
+            "id": s["id"],
+            "channel": s["channel"],
+            "time": safe_iso(s["time"]),
+            "confidence": s["confidence"],
+            "incident_type": r.get("incident_type"),
+            "urgency": r.get("urgency"),
+            "location_raw": r.get("location_raw"),
+            "people_involved": r.get("people_involved"),
+            "key_phrases": r.get("key_phrases", []),
+            "flags": r.get("flags", []),
+            "receive_time": safe_iso(r.get("receive_time")),
+        })
+    return result
+
 def serialize_uir(uir):
     return {
         "uir_id": uir["uir_id"], "incident_type": uir["incident_type"],
@@ -102,7 +122,7 @@ def serialize_uir(uir):
                      "geo_score": uir["location"].get("geo_score", 0)},
         "people_involved": uir["people_involved"], "urgency": uir["urgency"],
         "confidence": uir["confidence"], "source_count": uir["source_count"],
-        "sources": [{"id":s["id"],"channel":s["channel"],"time":safe_iso(s["time"]),"confidence":s["confidence"]} for s in uir["sources"][:10]],
+        "sources": _enrich_sources(uir),
         "timeline": uir["timeline"][:10], "flags": uir["flags"],
         "linked_uirs": uir["linked_uirs"], "linked_uir_scores": uir.get("linked_uir_scores", {}), "status": uir["status"],
         "created_at": safe_iso(uir["created_at"]), "last_updated": safe_iso(uir["last_updated"]),

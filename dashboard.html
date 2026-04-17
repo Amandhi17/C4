@@ -404,6 +404,122 @@
     background: var(--bg-card);
     border-radius: 4px;
     font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    border: 1px solid transparent;
+  }
+  .source-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-light);
+  }
+
+  /* Source detail modal */
+  .source-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+    animation: fade-in 0.15s ease;
+  }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .source-modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    width: 420px;
+    max-width: 92vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: slide-up 0.18s ease;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  @keyframes slide-up { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .source-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+    border-radius: 10px 10px 0 0;
+  }
+  .source-modal-title {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .source-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.12s, background 0.12s;
+  }
+  .source-modal-close:hover { color: var(--text-primary); background: var(--bg-hover); }
+  .source-modal-body { padding: 14px 16px; }
+  .source-modal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(42,54,84,0.4);
+    gap: 12px;
+  }
+  .source-modal-row:last-child { border-bottom: none; }
+  .sm-key {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.4px;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+  .sm-val {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-align: right;
+    word-break: break-word;
+  }
+  .sm-val.muted { color: var(--text-secondary); font-weight: 400; }
+  .sm-phrases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+  .sm-phrase-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 2px 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-secondary);
+  }
+  .sm-flag-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 2px 6px;
+    background: rgba(249,115,22,0.1);
+    border: 1px solid rgba(249,115,22,0.2);
+    border-radius: 3px;
+    color: var(--high);
   }
   .source-channel {
     font-family: var(--font-mono);
@@ -925,9 +1041,87 @@ function IncidentList({ uirs, selectedId, onSelect }) {
 }
 
 // ============================================================
+// SOURCE DETAIL MODAL
+// ============================================================
+function SourceDetailModal({ src, onClose }) {
+  if (!src) return null;
+  const confPct = Math.round((src.confidence || 0) * 100);
+  const confColor = confPct > 70 ? 'var(--success)' : confPct > 50 ? 'var(--medium)' : 'var(--critical)';
+  const urgencyColors = { CRITICAL:'var(--critical)', HIGH:'var(--high)', MEDIUM:'var(--medium)', LOW:'var(--low)' };
+
+  function Row({ label, value, className }) {
+    if (value == null || value === '' || value === undefined) return null;
+    return (
+      <div className="source-modal-row">
+        <span className="sm-key">{label}</span>
+        <span className={`sm-val ${className || ''}`}>{value}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="source-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="source-modal">
+        <div className="source-modal-header">
+          <div className="source-modal-title">
+            <span className={`source-channel ${src.channel}`}>
+              {src.channel === 'voice' ? '📞 CALL' : '💬 SMS'}
+            </span>
+            {src.id}
+          </div>
+          <button className="source-modal-close" onClick={onClose} title="Close">✕</button>
+        </div>
+        <div className="source-modal-body">
+          <Row label="CHANNEL" value={src.channel === 'voice' ? 'Voice Call' : 'SMS'} />
+          <Row label="RECEIVED" value={src.receive_time ? new Date(src.receive_time).toLocaleString() : (src.time ? new Date(src.time).toLocaleString() : null)} className="muted" />
+          <Row label="INCIDENT TYPE" value={src.incident_type?.toUpperCase()} />
+          {src.urgency && (
+            <div className="source-modal-row">
+              <span className="sm-key">URGENCY</span>
+              <span className="sm-val" style={{color: urgencyColors[src.urgency] || 'var(--text-primary)'}}>
+                {src.urgency}
+              </span>
+            </div>
+          )}
+          <div className="source-modal-row">
+            <span className="sm-key">CONFIDENCE</span>
+            <span className="sm-val" style={{color: confColor}}>{confPct}%</span>
+          </div>
+          <Row label="LOCATION (RAW)" value={src.location_raw} className="muted" />
+          <Row label="PEOPLE INVOLVED" value={src.people_involved != null ? src.people_involved : null} />
+          {src.key_phrases?.length > 0 && (
+            <div className="source-modal-row">
+              <span className="sm-key">KEY PHRASES</span>
+              <div className="sm-phrases">
+                {src.key_phrases.map((p, i) => (
+                  <span key={i} className="sm-phrase-tag">{p}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {src.flags?.length > 0 && (
+            <div className="source-modal-row">
+              <span className="sm-key">FLAGS</span>
+              <div className="sm-phrases">
+                {src.flags.map((f, i) => (
+                  <span key={i} className="sm-flag-tag">{f.replace(/_/g,' ')}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // DETAIL PANEL (Panel 3 & 4)
 // ============================================================
 function DetailPanel({ uir, onAction, onSelectUir }) {
+  const [selectedSource, setSelectedSource] = useState(null);
+  useEffect(() => { setSelectedSource(null); }, [uir?.uir_id]);
+
   if (!uir) {
     return (
       <div className="detail-panel">
@@ -1028,10 +1222,13 @@ function DetailPanel({ uir, onAction, onSelectUir }) {
 
       {/* Sources */}
       <div className="detail-section">
-        <div className="section-title">Contributing Sources</div>
+        <div className="section-title" style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+          <span>Contributing Sources</span>
+          <span style={{fontSize:'9px', color:'var(--text-muted)', fontWeight:400, letterSpacing:0}}>click for details</span>
+        </div>
         <div className="source-list">
           {(uir.sources || []).map((src, i) => (
-            <div key={i} className="source-item">
+            <div key={i} className="source-item" onClick={() => setSelectedSource(src)} title="Click to view source details">
               <span className={`source-channel ${src.channel}`}>
                 {src.channel === 'voice' ? '📞 CALL' : '💬 SMS'}
               </span>
@@ -1042,10 +1239,15 @@ function DetailPanel({ uir, onAction, onSelectUir }) {
               <span style={{fontFamily:'var(--font-mono)', fontSize:'11px', color: src.confidence > 0.7 ? 'var(--success)' : 'var(--text-muted)'}}>
                 {Math.round(src.confidence * 100)}%
               </span>
+              <span style={{color:'var(--text-muted)', fontSize:'10px'}}>›</span>
             </div>
           ))}
         </div>
       </div>
+
+      {selectedSource && (
+        <SourceDetailModal src={selectedSource} onClose={() => setSelectedSource(null)} />
+      )}
 
       {/* Timeline */}
       {uir.timeline?.length > 0 && (
