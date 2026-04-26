@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C4 Emergency Operations Dashboard — Flood & Fire</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-panel: #1a2236;
+    --bg-card: #1e293b;
+    --bg-hover: #263348;
+    --border: #2a3654;
+    --border-light: #374766;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --critical: #ff1744;
+    --critical-bg: rgba(255,23,68,0.13);
+    --critical-border: rgba(255,23,68,0.4);
+    --high: #ff6d00;
+    --high-bg: rgba(255,109,0,0.13);
+    --high-border: rgba(255,109,0,0.4);
+    --medium: #a855f7;
+    --medium-bg: rgba(168,85,247,0.13);
+    --medium-border: rgba(168,85,247,0.4);
+    --low: #06b6d4;
+    --low-bg: rgba(6,182,212,0.12);
+    --low-border: rgba(6,182,212,0.35);
+    --accent: #3b82f6;
+    --accent-glow: rgba(59,130,246,0.2);
+    --success: #22c55e;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ── STATUS BAR (Panel 5) ───────────────────────── */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 48px;
+    z-index: 100;
+  }
+  .status-bar .title {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .status-bar .title .live-dot {
+    width: 8px; height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+    box-shadow: 0 0 6px var(--success);
+  }
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .status-metrics {
+    display: flex;
+    gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .metric {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .metric .label { color: var(--text-muted); }
+  .metric .value { color: var(--text-primary); font-weight: 600; }
+  .metric .value.alert { color: var(--critical); }
+  .metric .value.warning { color: var(--high); }
+
+  /* ── MAIN LAYOUT ────────────────────────────────── */
+  .dashboard-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr 400px;
+    height: calc(100vh - 48px - 50px);
+  }
+
+  /* ── LEFT: INCIDENT LIST (Panel 2) ──────────────── */
+  .incident-list {
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .list-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: var(--bg-secondary);
+    z-index: 10;
+  }
+  .list-header .count {
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+  .incident-card {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .incident-card:hover { background: var(--bg-hover); }
+  .incident-card.selected { background: var(--bg-hover); border-left: 3px solid var(--accent); }
+  .incident-card.flash { animation: card-flash 0.6s ease-out; }
+  @keyframes card-flash {
+    0% { background: rgba(59,130,246,0.15); }
+    100% { background: transparent; }
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .card-title {
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .urgency-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+  }
+  .urgency-badge.CRITICAL { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); }
+  .urgency-badge.HIGH { background: var(--high-bg); color: var(--high); border: 1px solid var(--high-border); }
+  .urgency-badge.MEDIUM { background: var(--medium-bg); color: var(--medium); border: 1px solid var(--medium-border); }
+  .urgency-badge.LOW { background: var(--low-bg); color: var(--low); border: 1px solid var(--low-border); }
+  .card-meta {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .card-meta span { display: flex; align-items: center; gap: 4px; }
+  .confidence-bar {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    display: inline-block;
+  }
+  .confidence-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .flag-icon {
+    font-size: 12px;
+    color: var(--high);
+  }
+
+  /* ── CENTER: MAP (Panel 1) ──────────────────────── */
+  .map-container {
+    position: relative;
+  }
+  #map {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+  }
+  .leaflet-container { background: var(--bg-primary) !important; }
+  .map-legend {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(17,24,39,0.92);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    z-index: 500;
+    font-size: 11px;
+    backdrop-filter: blur(8px);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+    color: var(--text-secondary);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid;
+  }
+
+  /* ── RIGHT PANEL TABS ───────────────────────────────── */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+    background: var(--bg-secondary);
+    overflow: hidden;
+  }
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+    flex-shrink: 0;
+  }
+  .panel-tab {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 11px 8px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .panel-tab:hover { color: var(--text-primary); }
+  .panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .panel-tab-content { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+  /* ── RIGHT: DETAIL PANEL (Panel 3 & 4) ─────────── */
+  .detail-panel {
+    background: var(--bg-secondary);
+    overflow-y: auto;
+    height: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* ── ML PANEL ────────────────────────────────────────── */
+  .ml-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .ml-compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-top: 10px;
+  }
+  .ml-compare-table th {
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ml-compare-table th:first-child { text-align: left; }
+  .ml-compare-table td {
+    padding: 7px 6px;
+    border-bottom: 1px solid rgba(42,54,84,0.5);
+    color: var(--text-secondary);
+    text-align: right;
+  }
+  .ml-compare-table td:first-child { text-align: left; }
+  .ml-compare-table tr.best-row td { color: var(--text-primary); font-weight: 600; }
+  .ml-compare-table tr.best-row td:first-child { color: var(--accent); }
+  .auc-cell { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+  .auc-bar { height: 6px; border-radius: 3px; background: var(--accent); opacity: 0.7; transition: width 0.4s; }
+  .best-row .auc-bar { opacity: 1; }
+  .best-badge {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px;
+    background: rgba(59,130,246,0.15); color: var(--accent);
+    border: 1px solid rgba(59,130,246,0.3); margin-left: 4px;
+  }
+  .ml-run-btn {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.5px; padding: 8px 16px;
+    border: 1px solid rgba(59,130,246,0.4); border-radius: 4px;
+    background: rgba(59,130,246,0.08); color: var(--accent);
+    cursor: pointer; transition: all 0.15s; width: 100%; margin-top: 10px;
+  }
+  .ml-run-btn:hover:not(:disabled) { background: rgba(59,130,246,0.18); }
+  .ml-run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .fi-row { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+  .fi-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); width: 130px; flex-shrink: 0; }
+  .fi-bar { height: 5px; border-radius: 3px; background: var(--accent); opacity: 0.8; }
+  .fi-val { font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); }
+  .ml-kv { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(42,54,84,0.4); }
+  .ml-kv:last-child { border-bottom: none; }
+  .ml-kv-key { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .ml-kv-val { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-primary); }
+  .ml-kv-val.good { color: var(--success); }
+  .ml-kv-val.warn { color: var(--high); }
+  .ml-empty { padding: 32px 16px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
+  .detail-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .detail-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+  }
+  .detail-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .detail-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+  .detail-section {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .info-item .info-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .info-item .info-value {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .info-value.conflict {
+    color: var(--high);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .source-list { display: flex; flex-direction: column; gap: 6px; }
+  .source-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: var(--bg-card);
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    border: 1px solid transparent;
+  }
+  .source-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-light);
+  }
+
+  /* Source detail modal */
+  .source-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+    animation: fade-in 0.15s ease;
+  }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .source-modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    width: 420px;
+    max-width: 92vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: slide-up 0.18s ease;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  @keyframes slide-up { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .source-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+    border-radius: 10px 10px 0 0;
+  }
+  .source-modal-title {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .source-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.12s, background 0.12s;
+  }
+  .source-modal-close:hover { color: var(--text-primary); background: var(--bg-hover); }
+  .source-modal-body { padding: 14px 16px; }
+  .source-modal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(42,54,84,0.4);
+    gap: 12px;
+  }
+  .source-modal-row:last-child { border-bottom: none; }
+  .sm-key {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.4px;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+  .sm-val {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-align: right;
+    word-break: break-word;
+  }
+  .sm-val.muted { color: var(--text-secondary); font-weight: 400; }
+  .sm-phrases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+  .sm-phrase-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 2px 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-secondary);
+  }
+  .sm-flag-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 2px 6px;
+    background: rgba(249,115,22,0.1);
+    border: 1px solid rgba(249,115,22,0.2);
+    border-radius: 3px;
+    color: var(--high);
+  }
+  .source-channel {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .source-channel.voice { background: rgba(59,130,246,0.15); color: var(--accent); }
+  .source-channel.sms { background: rgba(34,197,94,0.15); color: var(--success); }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 20px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .timeline-entry {
+    position: relative;
+    padding: 6px 0 12px;
+    font-size: 12px;
+  }
+  .timeline-entry::before {
+    content: '';
+    position: absolute;
+    left: -17px;
+    top: 10px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-secondary);
+  }
+  .timeline-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .timeline-text {
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+  .timeline-source {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Flags */
+  .flags-container { display: flex; flex-wrap: wrap; gap: 4px; }
+  .flag-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(249,115,22,0.1);
+    color: var(--high);
+    border: 1px solid rgba(249,115,22,0.2);
+  }
+  .flag-tag.critical-flag {
+    background: rgba(239,68,68,0.1);
+    color: var(--critical);
+    border-color: rgba(239,68,68,0.2);
+  }
+
+  /* ── OPERATOR ACTIONS (Panel 4) ─────────────────── */
+  .actions-bar {
+    padding: 14px 16px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+  }
+  .action-btn.confirm { border-color: rgba(34,197,94,0.4); color: var(--success); }
+  .action-btn.confirm:hover { background: rgba(34,197,94,0.1); }
+  .action-btn.dismiss { border-color: rgba(239,68,68,0.3); color: var(--critical); }
+  .action-btn.dismiss:hover { background: rgba(239,68,68,0.1); }
+
+  /* ── NO DATA SCREEN ─────────────────────────────── */
+  .loading-screen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 1000;
+    font-family: var(--font-mono);
+  }
+  .loading-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .location-strings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .loc-string {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    background: var(--bg-card);
+    border-radius: 3px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  /* ── SEARCH & FILTER ────────────────────────────── */
+  .list-search {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: sticky;
+    top: 45px;
+    z-index: 9;
+  }
+  .search-input {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px 7px 30px;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-family: var(--font-sans);
+    outline: none;
+    transition: border-color 0.15s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 9px center;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text-muted); }
+  .filter-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+  .filter-pill {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-pill:hover { color: var(--text-primary); border-color: var(--border-light); }
+  .filter-pill.active-CRITICAL { background: var(--critical-bg); color: var(--critical); border-color: var(--critical-border); }
+  .filter-pill.active-HIGH { background: var(--high-bg); color: var(--high); border-color: var(--high-border); }
+  .filter-pill.active-MEDIUM { background: var(--medium-bg); color: var(--medium); border-color: var(--medium-border); }
+  .filter-pill.active-LOW { background: var(--low-bg); color: var(--low); border-color: var(--low-border); }
+  .filter-pill.active-ALL { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+
+  /* ── TOAST NOTIFICATIONS ─────────────────────────── */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    pointer-events: none;
+  }
+  .toast {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-panel);
+    color: var(--text-primary);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toast-in 0.25s ease;
+    white-space: nowrap;
+  }
+  .toast.success { border-color: rgba(34,197,94,0.4); }
+  .toast.error { border-color: rgba(239,68,68,0.4); }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── STATS STRIP ─────────────────────────────────── */
+  .stats-strip {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    overflow: hidden;
+  }
+  .stat-chip {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    border-right: 1px solid var(--border);
+    gap: 2px;
+  }
+  .stat-chip:last-child { border-right: none; }
+  .stat-chip .s-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; }
+  .stat-chip .s-value { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .stat-chip .s-value.critical { color: var(--critical); }
+  .stat-chip .s-value.success { color: var(--success); }
+  .stat-chip .s-value.flood { color: #60a5fa; }
+  .stat-chip .s-value.fire { color: var(--high); }
+
+  /* ── CARD TIME ──────────────────────────────────── */
+  .card-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  /* ── IMPROVED ACTION BUTTONS ─────────────────────── */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 14px 16px;
+  }
+  .action-btn-v2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-sans);
+  }
+  .action-btn-v2:hover { background: var(--bg-hover); border-color: var(--border-light); transform: translateY(-1px); }
+  .action-btn-v2 .btn-icon { font-size: 18px; }
+  .action-btn-v2 .btn-label { font-size: 11px; font-weight: 700; font-family: var(--font-mono); letter-spacing: 0.3px; }
+  .action-btn-v2 .btn-desc { font-size: 10px; color: var(--text-muted); text-align: center; line-height: 1.3; }
+  .action-btn-v2.confirm { border-color: rgba(34,197,94,0.35); }
+  .action-btn-v2.confirm:hover { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.6); }
+  .action-btn-v2.confirm .btn-label { color: var(--success); }
+  .action-btn-v2.dismiss { border-color: rgba(239,68,68,0.3); }
+  .action-btn-v2.dismiss:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.6); }
+  .action-btn-v2.dismiss .btn-label { color: var(--critical); }
+  .action-btn-v2.split .btn-label { color: var(--high); }
+  .action-btn-v2.merge .btn-label { color: var(--accent); }
+  .action-btn-v2.correct .btn-label { color: var(--medium); }
+  .action-btn-v2.full-width { grid-column: span 2; flex-direction: row; justify-content: center; gap: 8px; }
+
+  /* ── MAP STATS OVERLAY ──────────────────────────── */
+  .map-stats-overlay {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(17,24,39,0.88);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 16px;
+    z-index: 500;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    backdrop-filter: blur(8px);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    pointer-events: none;
+  }
+  .map-stat { display: flex; align-items: center; gap: 5px; }
+
+  /* ── EMPTY STATE ──────────────────────────────────── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    padding: 32px;
+    text-align: center;
+  }
+  .empty-state .empty-icon { font-size: 36px; opacity: 0.5; }
+  .empty-state .empty-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+  .empty-state .empty-hint { font-size: 12px; color: var(--text-muted); line-height: 1.6; max-width: 220px; }
+
+  /* ── CONFIDENCE GAUGE ────────────────────────────── */
+  .confidence-gauge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .gauge-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .gauge-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ── Helpers ──────────────────────────────────────────────────
+function timeAgo(iso) {
+  if (!iso) return '—';
+  const secs = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (secs < 60) return `${secs}s ago`;
+  if (secs < 3600) return `${Math.floor(secs/60)}m ago`;
+  if (secs < 86400) return `${Math.floor(secs/3600)}h ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+// ============================================================
+// URGENCY COLORS
+// ============================================================
+const URGENCY_COLORS = {
+  CRITICAL: { color: '#ff1744', bg: 'rgba(255,23,68,0.13)' },
+  HIGH:     { color: '#ff6d00', bg: 'rgba(255,109,0,0.13)' },
+  MEDIUM:   { color: '#a855f7', bg: 'rgba(168,85,247,0.13)' },
+  LOW:      { color: '#06b6d4', bg: 'rgba(6,182,212,0.12)' },
+};
+
+// ============================================================
+// STATUS BAR
+// ============================================================
+function StatusBar({ stats, uirCount, flaggedCount }) {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => { const t = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(t); }, []);
+  const precision = stats.precision != null ? `${(stats.precision * 100).toFixed(1)}%` : '—';
+
+  return (
+    <div className="status-bar">
+      <div className="title">
+        <span className="live-dot"></span>
+        C4 INCIDENT FUSION ENGINE
+      </div>
+      <div className="status-metrics">
+        <div className="metric">
+          <span className="label">ACTIVE UIRs</span>
+          <span className="value">{uirCount}</span>
+        </div>
+        <div className="metric">
+          <span className="label">🌊 FLOOD</span>
+          <span className="value" style={{color:'#60a5fa'}}>{stats.flood_uirs ?? '—'}</span>
+        </div>
+        <div className="metric">
+          <span className="label">🔥 FIRE</span>
+          <span className="value" style={{color:'var(--high)'}}>{stats.fire_uirs ?? '—'}</span>
+        </div>
+        <div className="metric">
+          <span className="label">FLAGGED</span>
+          <span className={`value ${flaggedCount > 0 ? 'warning' : ''}`}>{flaggedCount}</span>
+        </div>
+        <div className="metric">
+          <span className="label">REPORTS</span>
+          <span className="value">{stats.total_reports || 0}</span>
+        </div>
+        <div className="metric">
+          <span className="label">PRECISION</span>
+          <span className="value" style={{color:'var(--success)'}}>{precision}</span>
+        </div>
+        <div className="metric">
+          <span className="label">TIME</span>
+          <span className="value">{now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// INCIDENT LIST (Panel 2)
+// ============================================================
+const URGENCY_ORDER = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+
+function IncidentList({ uirs, selectedId, onSelect }) {
+  const [search, setSearch] = useState('');
+  const [filterUrgency, setFilterUrgency] = useState('ALL');
+
+  const filtered = uirs.filter(u => {
+    if (filterUrgency !== 'ALL' && u.urgency !== filterUrgency) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return u.location?.display_name?.toLowerCase().includes(q)
+          || u.incident_type?.toLowerCase().includes(q)
+          || u.uir_id?.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const urgencyCounts = {};
+  uirs.forEach(u => { urgencyCounts[u.urgency] = (urgencyCounts[u.urgency] || 0) + 1; });
+
+  return (
+    <div className="incident-list">
+      <div className="list-header">
+        <span>ACTIVE INCIDENTS</span>
+        <span className="count">{filtered.length}/{uirs.length}</span>
+      </div>
+
+      <div className="list-search">
+        <input
+          className="search-input"
+          placeholder="Search location, type, ID…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <div className="filter-pills">
+          {['ALL','CRITICAL','HIGH','MEDIUM','LOW'].map(u => (
+            <button
+              key={u}
+              className={`filter-pill ${filterUrgency === u ? `active-${u}` : ''}`}
+              onClick={() => setFilterUrgency(u)}
+            >
+              {u === 'ALL' ? `ALL (${uirs.length})` : `${u} (${urgencyCounts[u] || 0})`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.length === 0 && (
+        <div style={{padding:'24px 16px', textAlign:'center', color:'var(--text-muted)', fontSize:'12px'}}>
+          No incidents match your filter.
+        </div>
+      )}
+
+      {filtered.map(uir => {
+        const confColor = uir.confidence > 0.7 ? '#22c55e' : uir.confidence > 0.5 ? '#eab308' : '#ef4444';
+        return (
+          <div
+            key={uir.uir_id}
+            className={`incident-card ${selectedId === uir.uir_id ? 'selected' : ''}`}
+            onClick={() => onSelect(uir)}
+          >
+            <div className="card-header">
+              <div className="card-title">
+                <span className={`urgency-badge ${uir.urgency}`}>{uir.urgency}</span>
+                <span>{uir.incident_type === 'fire' ? '🔥' : '🌊'} {uir.incident_type.toUpperCase()}</span>
+              </div>
+              <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
+                {uir.flags.length > 0 && <span className="flag-icon" title="Has flags">⚠</span>}
+                <span className="card-time">{timeAgo(uir.last_updated)}</span>
+              </div>
+            </div>
+            <div style={{fontSize: '12px', marginBottom: '6px', color: '#e2e8f0'}}>
+              📍 {uir.location.display_name}
+            </div>
+            <div className="card-meta">
+              <span>🔗 {uir.source_count} src</span>
+              <span>👥 {uir.people_involved?.value ?? '—'}</span>
+              <span style={{marginLeft:'auto', display:'flex', alignItems:'center', gap:'4px'}}>
+                <span className="confidence-bar">
+                  <span className="confidence-fill" style={{width:`${(uir.confidence||0)*100}%`, background: confColor}} />
+                </span>
+                {Math.round((uir.confidence||0)*100)}%
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
+// SOURCE DETAIL MODAL
+// ============================================================
+function SourceDetailModal({ src, onClose }) {
+  if (!src) return null;
+  const confPct = Math.round((src.confidence || 0) * 100);
+  const confColor = confPct > 70 ? 'var(--success)' : confPct > 50 ? 'var(--medium)' : 'var(--critical)';
+  const urgencyColors = { CRITICAL:'var(--critical)', HIGH:'var(--high)', MEDIUM:'var(--medium)', LOW:'var(--low)' };
+
+  function Row({ label, value, className }) {
+    if (value == null || value === '' || value === undefined) return null;
+    return (
+      <div className="source-modal-row">
+        <span className="sm-key">{label}</span>
+        <span className={`sm-val ${className || ''}`}>{value}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="source-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="source-modal">
+        <div className="source-modal-header">
+          <div className="source-modal-title">
+            <span className={`source-channel ${src.channel}`}>
+              {src.channel === 'voice' ? '📞 CALL' : '💬 SMS'}
+            </span>
+            {src.id}
+          </div>
+          <button className="source-modal-close" onClick={onClose} title="Close">✕</button>
+        </div>
+        <div className="source-modal-body">
+          <Row label="CHANNEL" value={src.channel === 'voice' ? 'Voice Call' : 'SMS'} />
+          <Row label="RECEIVED" value={src.receive_time ? new Date(src.receive_time).toLocaleString() : (src.time ? new Date(src.time).toLocaleString() : null)} className="muted" />
+          <Row label="INCIDENT TYPE" value={src.incident_type?.toUpperCase()} />
+          {src.urgency && (
+            <div className="source-modal-row">
+              <span className="sm-key">URGENCY</span>
+              <span className="sm-val" style={{color: urgencyColors[src.urgency] || 'var(--text-primary)'}}>
+                {src.urgency}
+              </span>
+            </div>
+          )}
+          <div className="source-modal-row">
+            <span className="sm-key">CONFIDENCE</span>
+            <span className="sm-val" style={{color: confColor}}>{confPct}%</span>
+          </div>
+          <Row label="LOCATION (RAW)" value={src.location_raw} className="muted" />
+          <Row label="PEOPLE INVOLVED" value={src.people_involved != null ? src.people_involved : null} />
+          {src.key_phrases?.length > 0 && (
+            <div className="source-modal-row">
+              <span className="sm-key">KEY PHRASES</span>
+              <div className="sm-phrases">
+                {src.key_phrases.map((p, i) => (
+                  <span key={i} className="sm-phrase-tag">{p}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {src.flags?.length > 0 && (
+            <div className="source-modal-row">
+              <span className="sm-key">FLAGS</span>
+              <div className="sm-phrases">
+                {src.flags.map((f, i) => (
+                  <span key={i} className="sm-flag-tag">{f.replace(/_/g,' ')}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// DETAIL PANEL (Panel 3 & 4)
+// ============================================================
+function DetailPanel({ uir, onAction, onSelectUir }) {
+  const [selectedSource, setSelectedSource] = useState(null);
+  useEffect(() => { setSelectedSource(null); }, [uir?.uir_id]);
+
+  if (!uir) {
+    return (
+      <div className="detail-panel">
+        <div className="empty-state">
+          <span className="empty-icon">📋</span>
+          <span className="empty-title">No incident selected</span>
+          <span className="empty-hint">Click any incident in the list or tap a map marker to view details and take action.</span>
+        </div>
+      </div>
+    );
+  }
+
+  const confPct = Math.round((uir.confidence || 0) * 100);
+  const confColor = confPct > 70 ? 'var(--success)' : confPct > 50 ? 'var(--medium)' : 'var(--critical)';
+  const callCount = uir.sources?.filter(s => s.channel === 'voice').length || 0;
+  const smsCount  = uir.sources?.filter(s => s.channel === 'sms').length || 0;
+
+  return (
+    <div className="detail-panel">
+      {/* Header */}
+      <div className="detail-header">
+        <div className="detail-title">
+          <span className={`urgency-badge ${uir.urgency}`}>{uir.urgency}</span>
+          {uir.incident_type === 'fire' ? '🔥' : '🌊'} {uir.incident_type.toUpperCase()} — {uir.location.display_name}
+        </div>
+        <div className="detail-subtitle">
+          {uir.uir_id} · {timeAgo(uir.last_updated)}
+          {uir.status === 'confirmed' && <span style={{color:'var(--success)', marginLeft:'8px'}}>✓ Confirmed</span>}
+        </div>
+      </div>
+
+      {/* Flags */}
+      {uir.flags.length > 0 && (
+        <div className="detail-section" style={{background:'rgba(249,115,22,0.04)'}}>
+          <div className="section-title" style={{color:'var(--high)'}}>⚠ Flags Requiring Review</div>
+          <div className="flags-container">
+            {uir.flags.map((flag, i) => {
+              const isAutoMerged = flag === 'auto_merged';
+              return (
+                <span key={i} className={`flag-tag ${flag.includes('operator') || isAutoMerged ? 'critical-flag' : ''}`}
+                  style={isAutoMerged ? {background:'rgba(59,130,246,0.12)', color:'var(--accent)', borderColor:'rgba(59,130,246,0.3)'} : {}}>
+                  {isAutoMerged ? '⚡ AUTO-MERGED (score ≥ 82%)' : flag.replace(/_/g,' ')}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Info Grid */}
+      <div className="detail-section">
+        <div className="section-title">Incident Details</div>
+        <div className="info-grid">
+          <div className="info-item">
+            <div className="info-label">People Involved</div>
+            <div className={`info-value ${uir.people_involved?.conflict ? 'conflict' : ''}`}>
+              {uir.people_involved?.value ?? '—'}
+              {uir.people_involved?.conflict && ' ⚠ conflict'}
+            </div>
+          </div>
+          <div className="info-item">
+            <div className="info-label">Sources</div>
+            <div className="info-value">
+              {callCount > 0 && <span style={{color:'var(--accent)'}}>📞 {callCount}</span>}
+              {callCount > 0 && smsCount > 0 && ' · '}
+              {smsCount > 0 && <span style={{color:'var(--success)'}}>💬 {smsCount}</span>}
+            </div>
+          </div>
+          <div className="info-item" style={{gridColumn:'span 2'}}>
+            <div className="info-label" style={{marginBottom:'6px'}}>Confidence — {confPct}%</div>
+            <div className="confidence-gauge">
+              <div className="gauge-track">
+                <div className="gauge-fill" style={{width:`${confPct}%`, background: confColor}} />
+              </div>
+              <span style={{fontFamily:'var(--font-mono)', fontSize:'12px', fontWeight:700, color: confColor}}>{confPct}%</span>
+            </div>
+          </div>
+          <div className="info-item" style={{gridColumn:'span 2'}}>
+            <div className="info-label">Location</div>
+            <div style={{fontSize:'12px', marginTop:'2px', color: uir.location.resolved ? 'var(--text-primary)' : 'var(--high)'}}>
+              {uir.location.resolved ? '✅' : '⚠️'} {uir.location.display_name}
+              {uir.location?.lat && (
+                <span style={{color:'var(--text-muted)', fontFamily:'var(--font-mono)', fontSize:'10px', marginLeft:'8px'}}>
+                  {uir.location.lat?.toFixed(4)}, {uir.location.lng?.toFixed(4)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        {uir.location.source_strings?.length > 1 && (
+          <div className="location-strings">
+            {uir.location.source_strings.map((s, i) => (
+              <span key={i} className="loc-string">{s}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Sources */}
+      <div className="detail-section">
+        <div className="section-title" style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+          <span>Contributing Sources</span>
+          <span style={{fontSize:'9px', color:'var(--text-muted)', fontWeight:400, letterSpacing:0}}>click for details</span>
+        </div>
+        <div className="source-list">
+          {(uir.sources || []).map((src, i) => (
+            <div key={i} className="source-item" onClick={() => setSelectedSource(src)} title="Click to view source details">
+              <span className={`source-channel ${src.channel}`}>
+                {src.channel === 'voice' ? '📞 CALL' : '💬 SMS'}
+              </span>
+              <span style={{fontFamily:'var(--font-mono)', fontSize:'11px'}}>{src.id}</span>
+              <span style={{color:'var(--text-muted)', fontSize:'10px', marginLeft:'auto'}}>
+                {src.time ? timeAgo(src.time) : '—'}
+              </span>
+              <span style={{fontFamily:'var(--font-mono)', fontSize:'11px', color: src.confidence > 0.7 ? 'var(--success)' : 'var(--text-muted)'}}>
+                {Math.round(src.confidence * 100)}%
+              </span>
+              <span style={{color:'var(--text-muted)', fontSize:'10px'}}>›</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {selectedSource && (
+        <SourceDetailModal src={selectedSource} onClose={() => setSelectedSource(null)} />
+      )}
+
+      {/* Timeline */}
+      {uir.timeline?.length > 0 && (
+        <div className="detail-section">
+          <div className="section-title">Incident Timeline</div>
+          <div className="timeline">
+            {uir.timeline.map((entry, i) => (
+              <div key={i} className="timeline-entry">
+                <div className="timeline-time">{entry.time}</div>
+                <div className="timeline-text">{entry.summary}</div>
+                <div className="timeline-source">
+                  {entry.channel === 'voice' ? '📞' : '💬'} {entry.source}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Linked UIRs */}
+      {uir.linked_uirs?.length > 0 && (
+        <div className="detail-section">
+          <div className="section-title">🔗 Possible Duplicates
+            <span style={{color:'var(--text-muted)', fontWeight:400, marginLeft:'6px', fontSize:'9px'}}>
+              score &lt; 0.82 — not auto-merged
+            </span>
+          </div>
+          {uir.linked_uirs.map((id, i) => {
+            const score = uir.linked_uir_scores?.[id];
+            const scoreColor = score >= 0.75 ? 'var(--high)' : score >= 0.60 ? 'var(--medium)' : 'var(--text-muted)';
+            return (
+              <div
+                key={i}
+                onClick={() => onSelectUir(id)}
+                style={{
+                  fontSize:'12px', padding:'8px 10px', background:'var(--bg-card)',
+                  borderRadius:'6px', marginBottom:'6px', fontFamily:'var(--font-mono)',
+                  color:'var(--accent)', border:'1px solid rgba(59,130,246,0.25)',
+                  cursor:'pointer', display:'flex', alignItems:'center',
+                  justifyContent:'space-between', gap:'8px', transition:'background 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background='var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background='var(--bg-card)'}
+              >
+                <span>🔗 {id}</span>
+                <span style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                  {score != null && (
+                    <span style={{color: scoreColor, fontSize:'11px', fontWeight:700}}>
+                      score {(score * 100).toFixed(0)}%
+                    </span>
+                  )}
+                  <span style={{color:'var(--accent)'}}>→ Open</span>
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Operator Actions */}
+      <div className="detail-section">
+        <div className="section-title">Operator Actions</div>
+        <div className="actions-grid">
+          <button className="action-btn-v2 confirm" onClick={() => onAction(uir.uir_id, 'confirm')}>
+            <span className="btn-icon">✓</span>
+            <span className="btn-label">CONFIRM</span>
+            <span className="btn-desc">Mark as verified incident</span>
+          </button>
+          <button className="action-btn-v2 split" onClick={() => onAction(uir.uir_id, 'split')}>
+            <span className="btn-icon">✂</span>
+            <span className="btn-label">SPLIT</span>
+            <span className="btn-desc">Separate merged reports</span>
+          </button>
+          <button className="action-btn-v2 merge" onClick={() => onAction(uir.uir_id, 'merge')}>
+            <span className="btn-icon">⊕</span>
+            <span className="btn-label">MERGE</span>
+            <span className="btn-desc">Combine with another UIR</span>
+          </button>
+          <button className="action-btn-v2 correct" onClick={() => onAction(uir.uir_id, 'correct')}>
+            <span className="btn-icon">✎</span>
+            <span className="btn-label">CORRECT</span>
+            <span className="btn-desc">Fix urgency / type / location</span>
+          </button>
+          <button className="action-btn-v2 dismiss full-width" onClick={() => onAction(uir.uir_id, 'dismiss')}>
+            <span className="btn-icon">✕</span>
+            <span className="btn-label">DISMISS</span>
+            <span className="btn-desc">Remove false positive</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Action Log */}
+      {uir.operator_actions?.length > 0 && (
+        <div className="detail-section">
+          <div className="section-title">Action Log</div>
+          {uir.operator_actions.map((action, i) => (
+            <div key={i} style={{
+              fontSize:'11px', color:'var(--text-muted)', padding:'5px 0',
+              borderBottom:'1px solid var(--border)', fontFamily:'var(--font-mono)',
+              display:'flex', gap:'8px',
+            }}>
+              <span style={{color:'var(--text-secondary)'}}>{action.timestamp?.substring(11,19) || '—'}</span>
+              <span style={{color:'var(--text-primary)', fontWeight:600}}>{action.action}</span>
+              <span>by {action.operator_id}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// ML MODELS PANEL
+// ============================================================
+function MLPanel() {
+  const [comparison, setComparison] = React.useState(null);
+  const [status, setStatus] = React.useState(null);
+  const [running, setRunning] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  async function loadData() {
+    try {
+      const [cmpRes, stRes] = await Promise.all([
+        fetch('/api/ml/compare'),
+        fetch('/api/ml/status'),
+      ]);
+      const cmp = await cmpRes.json();
+      const st = await stRes.json();
+      if (cmp.algorithms) setComparison(cmp);
+      setStatus(st);
+    } catch(e) { setError('Failed to load ML data'); }
+  }
+
+  React.useEffect(() => { loadData(); }, []);
+
+  async function runCompare() {
+    setRunning(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/ml/compare', { method: 'POST' });
+      const data = await res.json();
+      if (data.algorithms) setComparison(data);
+      await loadData();
+    } catch(e) { setError('Comparison failed'); }
+    setRunning(false);
+  }
+
+  const METHOD_LABELS = {
+    xgboost: 'XGBoost',
+    random_forest: 'Random Forest',
+    lightgbm: 'LightGBM',
+    gradientboost: 'GradientBoost',
+    logistic: 'Logistic Reg',
+  };
+
+  const algos = comparison?.algorithms ? Object.entries(comparison.algorithms) : [];
+  const bestMethod = comparison?.best;
+
+  return (
+    <div style={{height:'100%', overflowY:'auto', scrollbarWidth:'thin'}}>
+
+      {/* Active Model Status */}
+      <div className="ml-section">
+        <div className="section-title">Active Model</div>
+        {status ? (
+          <div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">ALGORITHM</span>
+              <span className="ml-kv-val" style={{color:'var(--accent)'}}>
+                {METHOD_LABELS[bestMethod] || bestMethod || status.ml_dedup?.metrics?.method || '—'}
+                {bestMethod && <span className="best-badge">LIVE</span>}
+              </span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">AUC-ROC</span>
+              <span className="ml-kv-val good">
+                {status.ml_dedup?.metrics?.auc_roc != null
+                  ? status.ml_dedup.metrics.auc_roc.toFixed(4) : '—'}
+              </span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">F1</span>
+              <span className="ml-kv-val">
+                {status.ml_dedup?.metrics?.f1 != null
+                  ? status.ml_dedup.metrics.f1.toFixed(4) : '—'}
+              </span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">PRECISION</span>
+              <span className="ml-kv-val">
+                {status.ml_dedup?.metrics?.precision != null
+                  ? status.ml_dedup.metrics.precision.toFixed(4) : '—'}
+              </span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">RECALL</span>
+              <span className="ml-kv-val">
+                {status.ml_dedup?.metrics?.recall != null
+                  ? status.ml_dedup.metrics.recall.toFixed(4) : '—'}
+              </span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">TRAINED</span>
+              <span className={`ml-kv-val ${status.ml_dedup?.trained ? 'good' : 'warn'}`}>
+                {status.ml_dedup?.trained ? 'YES' : 'NO'}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="ml-empty">Loading...</div>
+        )}
+      </div>
+
+      {/* Algorithm Comparison Table */}
+      <div className="ml-section">
+        <div className="section-title">Algorithm Comparison</div>
+        {algos.length > 0 ? (
+          <table className="ml-compare-table">
+            <thead>
+              <tr>
+                <th>Algorithm</th>
+                <th>AUC</th>
+                <th>F1</th>
+                <th>Prec</th>
+                <th>Recall</th>
+                <th>Secs</th>
+              </tr>
+            </thead>
+            <tbody>
+              {algos.map(([method, m]) => {
+                const isBest = method === bestMethod;
+                const aucPct = (m.auc_roc * 100).toFixed(0);
+                return (
+                  <tr key={method} className={isBest ? 'best-row' : ''}>
+                    <td>
+                      {METHOD_LABELS[method] || method}
+                      {isBest && <span className="best-badge">BEST</span>}
+                    </td>
+                    <td>
+                      <div className="auc-cell">
+                        <div className="auc-bar" style={{width: `${aucPct * 0.5}px`}}></div>
+                        {m.auc_roc.toFixed(4)}
+                      </div>
+                    </td>
+                    <td>{m.f1.toFixed(4)}</td>
+                    <td>{m.precision.toFixed(4)}</td>
+                    <td>{m.recall.toFixed(4)}</td>
+                    <td>{m.train_seconds != null ? m.train_seconds.toFixed(1)+'s' : '—'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="ml-empty" style={{padding:'16px 0', textAlign:'left', fontSize:'11px'}}>
+            No comparison data yet.
+          </div>
+        )}
+        {error && <div style={{color:'var(--critical)', fontSize:'11px', marginTop:'8px'}}>{error}</div>}
+        <button className="ml-run-btn" onClick={runCompare} disabled={running}>
+          {running ? '⟳ Running comparison...' : '▶ Re-run Comparison'}
+        </button>
+      </div>
+
+      {/* Feature Importance */}
+      {status?.ml_dedup?.metrics?.feature_importance && (
+        <div className="ml-section">
+          <div className="section-title">Feature Importance (Active Model)</div>
+          {Object.entries(status.ml_dedup.metrics.feature_importance)
+            .sort((a,b) => b[1]-a[1])
+            .map(([feat, imp]) => (
+              <div key={feat} className="fi-row">
+                <span className="fi-label">{feat}</span>
+                <div className="fi-bar" style={{width: `${Math.round(imp*180)}px`}}></div>
+                <span className="fi-val">{imp.toFixed(3)}</span>
+              </div>
+            ))
+          }
+        </div>
+      )}
+
+      {/* Operator Correction Model */}
+      {status?.similarity_model && (
+        <div className="ml-section">
+          <div className="section-title">Operator Correction Model (LR)</div>
+          <div className="ml-kv">
+            <span className="ml-kv-key">TRAINED</span>
+            <span className={`ml-kv-val ${status.similarity_model.trained ? 'good' : 'warn'}`}>
+              {status.similarity_model.trained ? 'YES' : `NO (need 20, have ${status.similarity_model.n_examples})`}
+            </span>
+          </div>
+          <div className="ml-kv">
+            <span className="ml-kv-key">EXAMPLES</span>
+            <span className="ml-kv-val">{status.similarity_model.n_examples}</span>
+          </div>
+          {status.similarity_model.weights && (<>
+            <div className="ml-kv">
+              <span className="ml-kv-key">W:SEMANTIC</span>
+              <span className="ml-kv-val">{status.similarity_model.weights[0]?.toFixed(3)}</span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">W:GEO</span>
+              <span className="ml-kv-val">{status.similarity_model.weights[1]?.toFixed(3)}</span>
+            </div>
+            <div className="ml-kv">
+              <span className="ml-kv-key">W:TEMPORAL</span>
+              <span className="ml-kv-val">{status.similarity_model.weights[2]?.toFixed(3)}</span>
+            </div>
+          </>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Accuracy radius per resolution method (metres) ───────────────────────────
+const RESOLUTION_RADIUS = {
+  mapbox:                   150,
+  nominatim:                250,
+  exact:                    300,
+  address_city_exact:       400,
+  hierarchical_exact:       800,
+  fuzzy:                   1200,
+  landmark:                1400,
+  hierarchical_fuzzy:      1800,
+  hierarchical_landmark:   2000,
+  address_city_fuzzy:      2200,
+  unresolved:                 0,
+  none:                       0,
+  unknown:                 1500,
+};
+
+const RESOLUTION_LABEL = {
+  mapbox:              'Mapbox street-level',
+  nominatim:           'OSM street-level',
+  exact:               'GN exact match',
+  address_city_exact:  'Address → city exact',
+  hierarchical_exact:  'Hierarchical exact',
+  fuzzy:               'Fuzzy match (approx.)',
+  landmark:            'Landmark pattern (approx.)',
+  hierarchical_fuzzy:  'Hierarchical fuzzy (approx.)',
+  hierarchical_landmark:'Hierarchical landmark (approx.)',
+  address_city_fuzzy:  'Address → city fuzzy (approx.)',
+  unresolved:          'Unresolved',
+  none:                'No location',
+  unknown:             'Unknown',
+};
+
+// ============================================================
+// MAP COMPONENT (Panel 1)
+// ============================================================
+function MapPanel({ uirs, selectedId, onSelect }) {
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const layersRef = useRef({});   // stores { marker, circle } per uir_id
+
+  // Initialize map once
+  useEffect(() => {
+    if (mapInstance.current) return;
+
+    const map = L.map(mapRef.current, {
+      center: [7.8, 80.7],
+      zoom: 8,
+      zoomControl: true,
+    });
+
+    // Detailed tile layer — OpenStreetMap Humanitarian (good Sri Lanka coverage)
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap · Humanitarian OpenStreetMap Team',
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Scale bar
+    L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
+
+    mapInstance.current = map;
+    return () => { map.remove(); mapInstance.current = null; };
+  }, []);
+
+  // Update markers + circles whenever UIRs or selection changes
+  useEffect(() => {
+    if (!mapInstance.current) return;
+    const map = mapInstance.current;
+
+    // Remove old layers
+    Object.values(layersRef.current).forEach(({ marker, circle }) => {
+      map.removeLayer(marker);
+      if (circle) map.removeLayer(circle);
+    });
+    layersRef.current = {};
+
+    const validUirs = uirs.filter(u => u.location?.lat && u.location?.lng);
+
+    validUirs.forEach(uir => {
+      const colors   = URGENCY_COLORS[uir.urgency] || URGENCY_COLORS.LOW;
+      const isSelected = uir.uir_id === selectedId;
+      const isFire   = uir.incident_type === 'fire';
+      const hasFlag  = uir.flags?.length > 0;
+      const size     = isSelected ? 18 : (uir.urgency === 'CRITICAL' ? 14 : 11);
+      const markerColor = isFire ? '#ff6d00' : colors.color;
+
+      // Accuracy circle
+      const method = uir.location?.resolution_method || 'unknown';
+      const radius = RESOLUTION_RADIUS[method] || 1500;
+      let circle = null;
+      if (radius > 0) {
+        const isApprox = radius > 500;
+        circle = L.circle([uir.location.lat, uir.location.lng], {
+          radius,
+          color: markerColor,
+          fillColor: markerColor,
+          fillOpacity: isApprox ? 0.04 : 0.07,
+          opacity: isApprox ? 0.25 : 0.45,
+          weight: isApprox ? 1 : 1.5,
+          dashArray: isApprox ? '5,5' : null,
+        }).addTo(map);
+      }
+
+      // Marker icon
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="
+          width:${size}px; height:${size}px;
+          background:${markerColor};
+          ${isFire ? 'clip-path:polygon(50% 0%,0% 100%,100% 100%);' : 'border-radius:50%;'}
+          border:2px solid ${isSelected ? '#fff' : 'rgba(255,255,255,0.4)'};
+          box-shadow:0 0 ${isSelected ? 14 : 7}px ${markerColor};
+          ${uir.urgency === 'CRITICAL' ? 'animation:pulse-dot 1.5s infinite;' : ''}
+          position:relative;
+        ">${hasFlag ? '<span style="position:absolute;top:-7px;right:-7px;font-size:11px;line-height:1;">⚠</span>' : ''}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2],
+      });
+
+      // Tooltip
+      const resLabel = RESOLUTION_LABEL[method] || method;
+      const geoScore = uir.location?.geo_score;
+      const tooltipHtml = `
+        <b>${uir.location.display_name}</b><br>
+        ${isFire ? '🔥 FIRE' : '🌊 FLOOD'} · <b>${uir.urgency}</b> · ${uir.source_count} source${uir.source_count !== 1 ? 's' : ''}<br>
+        <span style="color:#94a3b8;font-size:10px">📍 ${resLabel}${geoScore ? ` (score ${geoScore})` : ''}</span><br>
+        <span style="color:#94a3b8;font-size:10px">±${radius >= 1000 ? (radius/1000).toFixed(1)+'km' : radius+'m'} accuracy</span>
+      `;
+
+      const marker = L.marker([uir.location.lat, uir.location.lng], { icon })
+        .addTo(map)
+        .bindTooltip(tooltipHtml, { className: 'dark-tooltip', direction: 'top' })
+        .on('click', () => onSelect(uir));
+
+      layersRef.current[uir.uir_id] = { marker, circle };
+    });
+
+    // Auto-fit to all markers when data loads
+    if (validUirs.length > 0 && !selectedId) {
+      const bounds = L.latLngBounds(validUirs.map(u => [u.location.lat, u.location.lng]));
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+    }
+
+    // Pan to selected marker
+    if (selectedId) {
+      const sel = uirs.find(u => u.uir_id === selectedId);
+      if (sel?.location?.lat) {
+        map.panTo([sel.location.lat, sel.location.lng], { animate: true });
+      }
+    }
+  }, [uirs, selectedId, onSelect]);
+  
+  const critical = uirs.filter(u => u.urgency === 'CRITICAL').length;
+  const flagged  = uirs.filter(u => u.flags?.length > 0).length;
+
+  return (
+    <div className="map-container">
+      <div id="map" ref={mapRef}></div>
+      <div className="map-stats-overlay">
+        <div className="map-stat"><span style={{color:'var(--critical)'}}>●</span> {critical} CRITICAL</div>
+        <div className="map-stat"><span style={{color:'#60a5fa'}}>🌊</span> {uirs.filter(u=>u.incident_type==='flood').length} flood</div>
+        <div className="map-stat"><span style={{color:'var(--high)'}}>🔥</span> {uirs.filter(u=>u.incident_type==='fire').length} fire</div>
+        {flagged > 0 && <div className="map-stat"><span>⚠</span> {flagged} flagged</div>}
+      </div>
+      <div className="map-legend">
+        <div style={{fontWeight:600, marginBottom:'6px', color:'#e2e8f0', fontSize:'11px'}}>LEGEND</div>
+        {Object.entries(URGENCY_COLORS).map(([level, c]) => (
+          <div key={level} className="legend-item">
+            <div className="legend-dot" style={{background:c.color, borderColor:c.color}}></div>
+            {level}
+          </div>
+        ))}
+        <div className="legend-item" style={{marginTop:'6px', borderTop:'1px solid #2a3654', paddingTop:'6px'}}>
+          <span>▲</span> Fire &nbsp; <span>●</span> Flood
+        </div>
+        <div className="legend-item"><span>⚠</span> Has flags</div>
+        <div style={{marginTop:'6px', borderTop:'1px solid #2a3654', paddingTop:'6px', fontSize:'10px', color:'#64748b'}}>
+          <div style={{marginBottom:'3px', fontWeight:600}}>ACCURACY CIRCLE</div>
+          <div style={{display:'flex', alignItems:'center', gap:'6px', marginBottom:'2px'}}>
+            <div style={{width:'20px', height:'2px', background:'rgba(100,200,100,0.6)', borderBottom:'2px solid rgba(100,200,100,0.6)'}}></div>
+            Street-level (≤250m)
+          </div>
+          <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
+            <div style={{width:'20px', height:'2px', borderBottom:'2px dashed rgba(150,150,150,0.5)'}}></div>
+            Approx. (&gt;500m)
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN APP
+// ============================================================
+function App() {
+  const [uirs, setUirs] = useState([]);
+  const [selectedUir, setSelectedUir] = useState(null);
+  const [stats, setStats] = useState({});
+  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [rightTab, setRightTab] = useState('incident');
+  const [toasts, setToasts] = useState([]);
+  const wsRef = useRef(null);
+
+  function showToast(msg, type = 'success') {
+    const id = Date.now();
+    setToasts(t => [...t, { id, msg, type }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000);
+  }
+  
+  // ── Load data: HTTP first (instant), then try WebSocket for live updates ──
+  useEffect(() => {
+    let poll = null;
+    
+    async function loadHTTP() {
+      try {
+        const res = await fetch('/api/uirs');
+        if (!res.ok) return false;
+        const data = await res.json();
+        setUirs(data.uirs || []);
+        if (data.stats) setStats(data.stats);
+        setLoading(false);
+        setConnected(true);
+        return true;
+      } catch(e) { return false; }
+    }
+    
+    function tryWS() {
+      try {
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(proto + '//' + location.host + '/ws/dashboard');
+        wsRef.current = ws;
+        ws.onmessage = (ev) => {
+          const d = JSON.parse(ev.data);
+          if (d.type === 'init') { setUirs(d.uirs||[]); if(d.stats) setStats(d.stats); setLoading(false); if(poll){clearInterval(poll);poll=null;} }
+          else if (d.type === 'uir_update') {
+            if(d.stats) setStats(d.stats);
+            setUirs(p => { const i = p.findIndex(u=>u.uir_id===d.uir.uir_id); if(i>=0){const c=[...p];c[i]=d.uir;return c;} return [...p,d.uir]; });
+            setSelectedUir(p => p && p.uir_id===d.uir.uir_id ? d.uir : p);
+          }
+        };
+        ws.onclose = () => { if(!poll) poll = setInterval(loadHTTP, 3000); };
+        ws.onerror = () => ws.close();
+      } catch(e) {}
+    }
+    
+    async function init() {
+      const ok = await loadHTTP();
+      if (ok) tryWS();
+      else poll = setInterval(async()=>{ if(await loadHTTP()) tryWS(); }, 2000);
+    }
+    init();
+    
+    return () => { if(poll) clearInterval(poll); if(wsRef.current) wsRef.current.close(); };
+  }, []);
+  
+  // ── Operator Actions ────────────────────────────
+  const ACTION_LABELS = { confirm:'Confirmed', dismiss:'Dismissed', split:'Split', merge:'Merged', correct:'Corrected' };
+  const handleAction = useCallback(async (uirId, actionType) => {
+    try {
+      await fetch(`/api/uirs/${uirId}/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action_type: actionType,
+          operator_id: 'operator_001',
+          note: `${actionType} via dashboard`,
+        }),
+      });
+      showToast(`${ACTION_LABELS[actionType] || actionType}: ${uirId}`);
+      if (actionType === 'dismiss') {
+        setUirs(prev => prev.filter(u => u.uir_id !== uirId));
+        setSelectedUir(null);
+      }
+    } catch (err) {
+      showToast('Action failed — check server', 'error');
+    }
+  }, []);
+  
+  // ── Sort UIRs: CRITICAL pinned top ──────────────
+  const sortedUirs = [...uirs]
+    .filter(u => u.status === 'active' || u.status === 'confirmed')
+    .sort((a, b) => {
+      const order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+      return (order[a.urgency] || 4) - (order[b.urgency] || 4);
+    });
+  
+  const flaggedCount = sortedUirs.filter(u => u.flags?.length > 0).length;
+  
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner"></div>
+        <div style={{marginBottom:'8px'}}>Connecting to C4 Pipeline...</div>
+        <div style={{fontSize:'11px',color:'#64748b'}}>Make sure server is running: python server.py</div>
+      </div>
+    );
+  }
+  
+  const criticalCount = sortedUirs.filter(u => u.urgency === 'CRITICAL').length;
+
+  return (
+    <div>
+      <StatusBar stats={stats} uirCount={sortedUirs.length} flaggedCount={flaggedCount} />
+
+      {/* Stats Strip */}
+      <div className="stats-strip">
+        <div className="stat-chip">
+          <span className="s-label">Critical</span>
+          <span className={`s-value ${criticalCount > 0 ? 'critical' : ''}`}>{criticalCount}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="s-label">🌊 Flood</span>
+          <span className="s-value flood">{stats.flood_uirs ?? '—'}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="s-label">🔥 Fire</span>
+          <span className="s-value fire">{stats.fire_uirs ?? '—'}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="s-label">Precision</span>
+          <span className="s-value success">{stats.precision != null ? `${(stats.precision*100).toFixed(1)}%` : '—'}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="s-label">Recall</span>
+          <span className="s-value">{stats.recall != null ? `${(stats.recall*100).toFixed(1)}%` : '—'}</span>
+        </div>
+        <div className="stat-chip">
+          <span className="s-label">Total Reports</span>
+          <span className="s-value">{stats.total_reports ?? '—'}</span>
+        </div>
+      </div>
+
+      <div className="dashboard-layout" style={{height:'calc(100vh - 48px - 50px)'}}>
+        <IncidentList
+          uirs={sortedUirs}
+          selectedId={selectedUir?.uir_id}
+          onSelect={setSelectedUir}
+        />
+        <MapPanel
+          uirs={sortedUirs}
+          selectedId={selectedUir?.uir_id}
+          onSelect={setSelectedUir}
+        />
+        <div className="right-panel">
+          <div className="panel-tabs">
+            <button
+              className={`panel-tab ${rightTab === 'incident' ? 'active' : ''}`}
+              onClick={() => setRightTab('incident')}
+            >
+              Incident
+            </button>
+            <button
+              className={`panel-tab ${rightTab === 'ml' ? 'active' : ''}`}
+              onClick={() => setRightTab('ml')}
+            >
+              ML Models
+            </button>
+          </div>
+          <div className="panel-tab-content">
+            {rightTab === 'incident'
+              ? <DetailPanel uir={selectedUir} onAction={handleAction} onSelectUir={id => { const found = uirs.find(u => u.uir_id === id); if (found) { setSelectedUir(found); setRightTab('incident'); } }} />
+              : <MLPanel />
+            }
+          </div>
+        </div>
+      </div>
+
+      {/* Toast notifications */}
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.type}`}>
+            {t.type === 'success' ? '✓' : '✕'} {t.msg}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+
+<style>
+  /* Dark tooltip for Leaflet */
+  .dark-tooltip {
+    background: rgba(17,24,39,0.95) !important;
+    border: 1px solid #2a3654 !important;
+    color: #e2e8f0 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  }
+  .dark-tooltip::before {
+    border-top-color: rgba(17,24,39,0.95) !important;
+  }
+</style>
+</body>
+</html>
