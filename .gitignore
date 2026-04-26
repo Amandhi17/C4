@@ -1,5 +1,19 @@
+# Virtual environment
 venv/
+
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# ML models / binaries
+*.pkl
+
+# Project-specific
 labse_model/
+
+# Claude / config
 .claude
 CLAUDE.md
-.env
