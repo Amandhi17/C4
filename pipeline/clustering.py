@@ -24,9 +24,9 @@ from typing import Optional
 
 EPSILON = {
     'CRITICAL': 0.15,   # min similarity 0.85 — near-refusal to merge
-    'HIGH':     0.25,   # min similarity 0.75
-    'MEDIUM':   0.30,   # min similarity 0.70
-    'LOW':      0.40,   # min similarity 0.60
+    'HIGH':     0.22,   # min similarity 0.78
+    'MEDIUM':   0.27,   # min similarity 0.73
+    'LOW':      0.30,   # min similarity 0.70  (raised from 0.60)
 }
 
 # Critical safety gate thresholds
@@ -48,7 +48,7 @@ NON_CRITICAL_GATE = {
 
 # If similarity score >= this threshold, force-merge even if safety gate blocked,
 # and mark with 'auto_merged' flag. Below this → keep as possible duplicate.
-AUTO_MERGE_THRESHOLD = 0.82
+AUTO_MERGE_THRESHOLD = 0.88
 
 
 # ============================================================

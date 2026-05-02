@@ -158,49 +158,87 @@ class PairGenerator:
     def generate(self, reports: list, neg_ratio: float = 3.0,
                  max_easy_neg: int = 500,
                  max_hard_neg: int = 2200) -> list:
-        """
-        Returns list of (report_a, report_b, label) tuples.
+        """Backward-compatible wrapper — returns pairs only."""
+        pairs, _ = self.generate_with_sources(
+            reports,
+            max_easy_neg=max_easy_neg,
+            max_hard_neg=max_hard_neg,
+        )
+        return pairs
 
-        max_hard_neg: hard negatives mined from scenario tags + existing rules.
-        max_easy_neg: random cross-incident negatives. Capped low to prevent
-                      AUC inflation from trivial cases.
-        neg_ratio: kept for backward compatibility but no longer used to scale
-                   easy negatives; explicit caps drive the count instead.
+    def generate_with_sources(self, reports: list,
+                              max_easy_neg: int = 500,
+                              max_hard_neg: int = 2200,
+                              centroid_pairs: bool = True,
+                              max_centroid_neg: int = 1500,
+                              max_centroid_pos: int = 1500) -> tuple:
+        """
+        Returns (pairs, sources) — parallel lists.
+
+        sources tag each pair with its origin so train_compare can apply
+        per-class sample weights.
+
+        Sources:
+          'pos_raw'       — same-incident raw report pair (label=1)
+          'pos_centroid'  — report vs. its own incident's running centroid (label=1)
+          'hard_scenario' — different incidents tagged adjacent_critical /
+                            geographically_near / same_street_neighbors (label=0)
+          'hard_rule'     — same-location / same-type / close-time hard neg (label=0)
+          'hard_centroid' — report vs. nearby wrong-incident centroid (label=0)
+          'easy'          — random cross-incident raw pair (label=0)
         """
         reports = [r for r in reports if r.get('embedding') is not None
                    and r.get('_ground_truth', {}).get('incident_id', 'UNKNOWN') != 'UNKNOWN']
 
-        positives = self._positive_pairs(reports)
+        # 1) Raw positives
+        pos_raw = self._positive_pairs(reports)
 
-        # 1) Scenario-tag-driven hard negatives (the gold class)
+        # 2) Hard negatives — scenario-tag + rule-based, deduped
         scenario_neg = self._scenario_hard_negatives(reports)
-
-        # 2) Existing rule-based hard negatives (same-location / same-type / etc.)
         rule_neg = self._hard_negatives(reports)
-
-        # Merge & dedupe (a pair can satisfy multiple criteria)
         seen = set()
         hard_neg: list = []
-        for pair in scenario_neg + rule_neg:
-            ra, rb, _ = pair
-            key = frozenset((id(ra), id(rb)))
-            if key in seen:
-                continue
-            seen.add(key)
-            hard_neg.append(pair)
+        hard_src: list = []
+        for src, bag in (('hard_scenario', scenario_neg), ('hard_rule', rule_neg)):
+            for pair in bag:
+                ra, rb, _ = pair
+                key = frozenset((id(ra), id(rb)))
+                if key in seen:
+                    continue
+                seen.add(key)
+                hard_neg.append(pair)
+                hard_src.append(src)
         if len(hard_neg) > max_hard_neg:
-            hard_neg = self._rng.sample(hard_neg, max_hard_neg)
+            idx = self._rng.sample(range(len(hard_neg)), max_hard_neg)
+            hard_neg = [hard_neg[i] for i in idx]
+            hard_src = [hard_src[i] for i in idx]
 
-        # 3) A small slice of random easy negatives — sanity floor only
+        # 3) Easy negatives — small floor for diversity
         easy_neg = self._random_negatives(reports, max_easy_neg)
 
-        print(f"  [PairGen] Positives: {len(positives)}, "
-              f"Scenario hard: {len(scenario_neg)}, "
-              f"Rule hard: {len(rule_neg)}, "
-              f"Hard total (deduped): {len(hard_neg)}, "
+        # 4) Centroid pairs — match the report-vs-UIR shape used at inference
+        cen_pos, cen_neg = [], []
+        if centroid_pairs:
+            cen_pos, cen_neg = self._centroid_pairs(
+                reports,
+                max_pos=max_centroid_pos,
+                max_neg=max_centroid_neg,
+            )
+
+        pairs = pos_raw + hard_neg + easy_neg + cen_pos + cen_neg
+        sources = (['pos_raw'] * len(pos_raw)
+                   + hard_src
+                   + ['easy'] * len(easy_neg)
+                   + ['pos_centroid'] * len(cen_pos)
+                   + ['hard_centroid'] * len(cen_neg))
+
+        print(f"  [PairGen] PosRaw: {len(pos_raw)}, "
+              f"PosCentroid: {len(cen_pos)}, "
+              f"Hard(scenario+rule): {len(hard_neg)}, "
+              f"HardCentroid: {len(cen_neg)}, "
               f"Easy: {len(easy_neg)}, "
-              f"Total: {len(positives)+len(hard_neg)+len(easy_neg)}")
-        return positives + hard_neg + easy_neg
+              f"Total: {len(pairs)}")
+        return pairs, sources
 
     def _scenario_hard_negatives(self, reports: list) -> list:
         """
@@ -233,6 +271,113 @@ class PairGenerator:
                     if ia != ib:
                         pairs.append((reps[i], reps[j], 0))
         return pairs
+
+    def _centroid_pairs(self, reports: list,
+                        max_pos: int = 1500, max_neg: int = 1500,
+                        max_neg_distance_km: float = 10.0) -> tuple:
+        """
+        Simulate the production clustering loop and emit (report, centroid_pseudo)
+        pairs that match the report-vs-UIR shape used at inference time.
+
+        For each report processed in time order:
+          - If its incident already has prior reports: emit positive pair
+            (report, own_running_centroid, 1).
+          - For each other incident with prior reports in the same district +
+            incident_type and within max_neg_distance_km: emit hard negative
+            (report, wrong_running_centroid, 0).
+
+        The centroid pseudo-report has the same shape as ml_similarity()'s
+        uir_pseudo, so features extracted match exactly what production sees.
+        """
+        def _ts(r):
+            t = r.get('timestamp') or r.get('receive_time')
+            return t if t is not None else 0
+
+        ordered = sorted(reports, key=_ts)
+
+        # incident_id -> list of reports seen so far (in time order)
+        prior: dict = {}
+        pos_pairs: list = []
+        neg_pairs: list = []
+
+        for r in ordered:
+            iid = r['_ground_truth']['incident_id']
+            district = r['_ground_truth'].get('district', '')
+            itype = r.get('incident_type', '')
+
+            # Positive: report vs. own running centroid (priors only)
+            if prior.get(iid):
+                cen = self._build_centroid_pseudo(prior[iid], iid)
+                pos_pairs.append((r, cen, 1))
+
+            # Hard negatives: report vs. nearby wrong-incident centroids
+            for other_iid, other_priors in prior.items():
+                if other_iid == iid or not other_priors:
+                    continue
+                first = other_priors[0]
+                if (first['_ground_truth'].get('district', '') != district
+                        or first.get('incident_type', '') != itype):
+                    continue
+                cen = self._build_centroid_pseudo(other_priors, other_iid)
+                if (r.get('lat') is not None and cen.get('lat') is not None):
+                    d = _haversine_km(r['lat'], r['lng'], cen['lat'], cen['lng'])
+                    if d > max_neg_distance_km:
+                        continue
+                neg_pairs.append((r, cen, 0))
+                if len(neg_pairs) >= max_neg * 2:
+                    break
+
+            prior.setdefault(iid, []).append(r)
+            if len(neg_pairs) >= max_neg * 2 and len(pos_pairs) >= max_pos * 2:
+                break
+
+        if len(pos_pairs) > max_pos:
+            pos_pairs = self._rng.sample(pos_pairs, max_pos)
+        if len(neg_pairs) > max_neg:
+            neg_pairs = self._rng.sample(neg_pairs, max_neg)
+        return pos_pairs, neg_pairs
+
+    @staticmethod
+    def _build_centroid_pseudo(prior_reports: list, incident_id: str) -> dict:
+        """
+        Build a UIR-shaped pseudo-report from prior reports of the same incident.
+        Mirrors the structure of ml_similarity()'s uir_pseudo so feature extraction
+        produces the same vector at training time as at inference time.
+        """
+        embs = [p['embedding'] for p in prior_reports if p.get('embedding') is not None]
+        if embs:
+            cen_emb = np.mean(embs, axis=0)
+            n = float(np.linalg.norm(cen_emb))
+            if n > 0:
+                cen_emb = cen_emb / n
+        else:
+            cen_emb = np.zeros(768, dtype=np.float32)
+
+        lats = [p['lat'] for p in prior_reports if p.get('lat') is not None]
+        lngs = [p['lng'] for p in prior_reports if p.get('lng') is not None]
+        cen_lat = (sum(lats) / len(lats)) if lats else None
+        cen_lng = (sum(lngs) / len(lngs)) if lngs else None
+
+        first = prior_reports[0]
+        last = prior_reports[-1]
+        langs = [p.get('_ground_truth', {}).get('language', '')
+                 for p in prior_reports
+                 if p.get('_ground_truth', {}).get('language')]
+        dom_lang = Counter(langs).most_common(1)[0][0] if langs else ''
+        loc_strs = [p.get('location_raw', '') for p in prior_reports[:3]
+                    if p.get('location_raw')]
+
+        return {
+            'embedding': cen_emb,
+            'lat': cen_lat,
+            'lng': cen_lng,
+            'incident_type': first.get('incident_type', ''),
+            'urgency': last.get('urgency', 'MEDIUM'),
+            'timestamp': last.get('timestamp', last.get('receive_time')),
+            'receive_time': first.get('receive_time'),
+            'location_raw': ' '.join(loc_strs),
+            '_ground_truth': {'language': dom_lang, 'incident_id': incident_id},
+        }
 
     def _positive_pairs(self, reports: list) -> list:
         """All within-incident pairs (same incident_id)."""
@@ -607,15 +752,29 @@ class MLDeduplicator:
 
         print("  [MLDedup] Generating training pairs for comparison...")
         gen = PairGenerator()
-        pairs = gen.generate(reports, neg_ratio=3.0)
+        pairs, sources = gen.generate_with_sources(reports)
 
         if len(pairs) < 50:
             return {"error": f"only {len(pairs)} pairs — need more data"}
 
+        # Per-source sample weights — boost hard negatives 3× so the model can't
+        # win by ignoring the close-but-different cases. Centroid positives get
+        # a small boost because they match the deployment shape.
+        SAMPLE_WEIGHT = {
+            'pos_raw':       1.0,
+            'pos_centroid':  1.5,
+            'hard_scenario': 3.0,
+            'hard_rule':     3.0,
+            'hard_centroid': 3.0,
+            'easy':          1.0,
+        }
+        weights = np.array([SAMPLE_WEIGHT.get(s, 1.0) for s in sources],
+                           dtype=np.float32)
+
         X = self._to_frame([self.extract_features(a, b) for a, b, _ in pairs])
         y = np.array([lbl for _, _, lbl in pairs])
-        X_tr, X_val, y_tr, y_val = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+        X_tr, X_val, y_tr, y_val, w_tr, w_val = train_test_split(
+            X, y, weights, test_size=0.2, random_state=42, stratify=y
         )
 
         candidates = []
@@ -636,7 +795,10 @@ class MLDeduplicator:
             print(f"\n  ── {method} ──")
             clf = self._build_classifier(method, y_tr)
             t0 = time.time()
-            clf.fit(X_tr, y_tr)
+            try:
+                clf.fit(X_tr, y_tr, sample_weight=w_tr)
+            except TypeError:
+                clf.fit(X_tr, y_tr)
             elapsed = time.time() - t0
             m = self._evaluate(clf, method, X_val, y_val, len(y_tr))
             m['train_seconds'] = round(elapsed, 2)
