@@ -1,10 +1,12 @@
 """
 C4 Dashboard Server — Run: python server.py — Open: http://localhost:8000
 """
-import json, sys, os, time
+import json, sys, os, time, warnings
 from datetime import datetime, timezone
 from pathlib import Path
 from collections import Counter
+
+warnings.filterwarnings("ignore", message="X does not have valid feature names")
 
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))

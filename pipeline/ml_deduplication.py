@@ -143,27 +143,96 @@ class PairGenerator:
       - Close in time but different location
     """
 
+    # Scenario tags whose pairs are "designed-to-be-confusable" — every
+    # cross-incident pair within these is a high-quality hard negative.
+    HARD_SCENARIOS = frozenset({
+        'adjacent_critical',
+        'geographically_near',
+        'same_street_neighbors',
+    })
+
     def __init__(self, seed: int = 42):
         random.seed(seed)
+        self._rng = random.Random(seed)
 
-    def generate(self, reports: list, neg_ratio: float = 3.0) -> list:
+    def generate(self, reports: list, neg_ratio: float = 3.0,
+                 max_easy_neg: int = 500,
+                 max_hard_neg: int = 2200) -> list:
         """
         Returns list of (report_a, report_b, label) tuples.
-        neg_ratio: number of negative pairs per positive pair.
+
+        max_hard_neg: hard negatives mined from scenario tags + existing rules.
+        max_easy_neg: random cross-incident negatives. Capped low to prevent
+                      AUC inflation from trivial cases.
+        neg_ratio: kept for backward compatibility but no longer used to scale
+                   easy negatives; explicit caps drive the count instead.
         """
         reports = [r for r in reports if r.get('embedding') is not None
                    and r.get('_ground_truth', {}).get('incident_id', 'UNKNOWN') != 'UNKNOWN']
 
         positives = self._positive_pairs(reports)
-        n_neg_target = int(len(positives) * neg_ratio)
-        hard_neg = self._hard_negatives(reports)
-        easy_neg = self._random_negatives(reports, max(0, n_neg_target - len(hard_neg)))
-        negatives = hard_neg + easy_neg
+
+        # 1) Scenario-tag-driven hard negatives (the gold class)
+        scenario_neg = self._scenario_hard_negatives(reports)
+
+        # 2) Existing rule-based hard negatives (same-location / same-type / etc.)
+        rule_neg = self._hard_negatives(reports)
+
+        # Merge & dedupe (a pair can satisfy multiple criteria)
+        seen = set()
+        hard_neg: list = []
+        for pair in scenario_neg + rule_neg:
+            ra, rb, _ = pair
+            key = frozenset((id(ra), id(rb)))
+            if key in seen:
+                continue
+            seen.add(key)
+            hard_neg.append(pair)
+        if len(hard_neg) > max_hard_neg:
+            hard_neg = self._rng.sample(hard_neg, max_hard_neg)
+
+        # 3) A small slice of random easy negatives — sanity floor only
+        easy_neg = self._random_negatives(reports, max_easy_neg)
 
         print(f"  [PairGen] Positives: {len(positives)}, "
-              f"Hard neg: {len(hard_neg)}, Easy neg: {len(easy_neg)}, "
-              f"Total: {len(positives)+len(negatives)}")
-        return positives + negatives
+              f"Scenario hard: {len(scenario_neg)}, "
+              f"Rule hard: {len(rule_neg)}, "
+              f"Hard total (deduped): {len(hard_neg)}, "
+              f"Easy: {len(easy_neg)}, "
+              f"Total: {len(positives)+len(hard_neg)+len(easy_neg)}")
+        return positives + hard_neg + easy_neg
+
+    def _scenario_hard_negatives(self, reports: list) -> list:
+        """
+        Mine hard negatives from explicit scenario labels in the synthetic dataset.
+
+        adjacent_critical / geographically_near / same_street_neighbors are
+        constructed to be physically close but represent DIFFERENT incidents.
+        Pairs within these scenarios where incident_ids differ are exactly the
+        "close but distinct" examples the model must learn to separate.
+
+        Bucketed by (district, incident_type) so we don't pair, e.g., a Colombo
+        flood with a Kandy fire — those would be trivial negatives, not hard.
+        """
+        candidates = [r for r in reports
+                      if r.get('_ground_truth', {}).get('scenario_type', '')
+                      in self.HARD_SCENARIOS]
+
+        by_dt: dict = {}
+        for r in candidates:
+            gt = r['_ground_truth']
+            key = (gt.get('district', ''), r.get('incident_type', ''))
+            by_dt.setdefault(key, []).append(r)
+
+        pairs = []
+        for reps in by_dt.values():
+            for i in range(len(reps)):
+                ia = reps[i]['_ground_truth']['incident_id']
+                for j in range(i + 1, len(reps)):
+                    ib = reps[j]['_ground_truth']['incident_id']
+                    if ia != ib:
+                        pairs.append((reps[i], reps[j], 0))
+        return pairs
 
     def _positive_pairs(self, reports: list) -> list:
         """All within-incident pairs (same incident_id)."""
