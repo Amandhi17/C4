@@ -7,6 +7,8 @@ from pathlib import Path
 from collections import Counter
 
 warnings.filterwarnings("ignore", message="X does not have valid feature names")
+warnings.filterwarnings("ignore", message=r".*sklearn\.utils\.parallel\.delayed.*")
+warnings.filterwarnings("ignore", category=UserWarning, module=r"sklearn\..*")
 
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
