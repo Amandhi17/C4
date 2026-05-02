@@ -280,6 +280,39 @@
 
   /* ── ML PANEL ────────────────────────────────────────── */
   .ml-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+
+  /* ── FLAGS PANEL ─────────────────────────────────── */
+  .flag-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px; margin-bottom: 4px;
+    background: var(--bg-tertiary, rgba(42,54,84,0.25));
+    border: 1px solid transparent; border-radius: 4px;
+    cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    font-family: var(--font-mono); font-size: 11px;
+  }
+  .flag-row:hover { background: rgba(96,165,250,0.10); border-color: var(--border); }
+  .flag-row.selected { background: rgba(96,165,250,0.16); border-color: var(--accent); }
+  .flag-row .flag-name { color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+  .flag-row .flag-count {
+    background: rgba(96,165,250,0.18); color: var(--accent);
+    padding: 1px 8px; border-radius: 10px; font-weight: 600; font-size: 10px;
+    min-width: 22px; text-align: center;
+  }
+  .flag-row.critical-flag .flag-count { background: rgba(239,68,68,0.18); color: var(--critical, #ef4444); }
+  .flag-uir-list { padding: 0 16px 14px 16px; }
+  .flag-uir-card {
+    padding: 8px 10px; margin-bottom: 4px;
+    background: var(--bg-tertiary, rgba(42,54,84,0.25));
+    border: 1px solid var(--border); border-radius: 4px;
+    cursor: pointer; transition: background 0.15s;
+    font-family: var(--font-mono); font-size: 10px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .flag-uir-card:hover { background: rgba(96,165,250,0.12); }
+  .flag-uir-card .uir-id { color: var(--accent); font-weight: 600; }
+  .flag-uir-card .uir-meta { color: var(--text-muted); font-size: 9px; }
+  .flag-uir-card .uir-loc { color: var(--text-secondary); }
+  .flag-empty { padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 11px; }
   .ml-compare-table {
     width: 100%;
     border-collapse: collapse;
@@ -1600,6 +1633,104 @@ const RESOLUTION_LABEL = {
 // ============================================================
 // MAP COMPONENT (Panel 1)
 // ============================================================
+function FlagsPanel({ uirs, onSelectUir }) {
+  const [selectedFlag, setSelectedFlag] = useState(null);
+
+  // Aggregate flags across all UIRs
+  const flagCounts = {};
+  uirs.forEach(u => {
+    (u.flags || []).forEach(f => { flagCounts[f] = (flagCounts[f] || 0) + 1; });
+  });
+  const flagEntries = Object.entries(flagCounts).sort((a, b) => b[1] - a[1]);
+
+  // UIRs that carry the currently selected flag
+  const matchingUirs = selectedFlag
+    ? uirs.filter(u => (u.flags || []).includes(selectedFlag))
+    : [];
+
+  // Friendly labels + which flags are operator-review-critical
+  const FLAG_LABEL = {
+    operator_review_required: 'Operator Review Required',
+    possible_duplicate_nearby: 'Possible Duplicate Nearby',
+    auto_merged: 'Auto-merged (gate bypassed)',
+    people_count_conflict: 'People Count Conflict',
+    type_conflict: 'Incident Type Conflict',
+    low_confidence: 'Low Confidence',
+    no_timestamp: 'Missing Timestamp',
+    no_location: 'No Location',
+    location_unresolved: 'Location Unresolved',
+    fuzzy_location: 'Fuzzy Location Match',
+    landmark_location: 'Landmark Location',
+    hierarchical_location: 'Hierarchical Location',
+    nominatim_location: 'Nominatim Geocoded',
+    mapbox_location: 'Mapbox Geocoded',
+    address_city_fallback: 'Address → City Fallback',
+  };
+  const CRITICAL_FLAGS = new Set([
+    'operator_review_required',
+    'possible_duplicate_nearby',
+    'people_count_conflict',
+    'type_conflict',
+    'auto_merged',
+    'location_unresolved',
+  ]);
+
+  return (
+    <div style={{height:'100%', overflowY:'auto', scrollbarWidth:'thin'}}>
+      <div className="ml-section">
+        <div className="section-title">Flags Requiring Review</div>
+        {flagEntries.length === 0 ? (
+          <div className="flag-empty">No flags raised — all clean.</div>
+        ) : (
+          flagEntries.map(([flag, count]) => {
+            const isSel = flag === selectedFlag;
+            const isCritical = CRITICAL_FLAGS.has(flag);
+            return (
+              <div
+                key={flag}
+                className={`flag-row ${isSel ? 'selected' : ''} ${isCritical ? 'critical-flag' : ''}`}
+                onClick={() => setSelectedFlag(isSel ? null : flag)}
+              >
+                <span className="flag-name">
+                  {isCritical ? '⚠' : '·'} {FLAG_LABEL[flag] || flag}
+                </span>
+                <span className="flag-count">{count}</span>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {selectedFlag && (
+        <div className="ml-section" style={{borderBottom:'none'}}>
+          <div className="section-title">
+            {matchingUirs.length} report{matchingUirs.length !== 1 ? 's' : ''} with «{FLAG_LABEL[selectedFlag] || selectedFlag}»
+          </div>
+          <div className="flag-uir-list" style={{padding:0, marginTop:8}}>
+            {matchingUirs.map(u => (
+              <div
+                key={u.uir_id}
+                className="flag-uir-card"
+                onClick={() => onSelectUir && onSelectUir(u.uir_id)}
+              >
+                <div style={{display:'flex', justifyContent:'space-between'}}>
+                  <span className="uir-id">{u.uir_id}</span>
+                  <span className="uir-meta">{u.urgency} · {u.incident_type}</span>
+                </div>
+                <span className="uir-loc">{u.location?.display_name || '—'}</span>
+                <span className="uir-meta">
+                  {u.source_count} source{u.source_count !== 1 ? 's' : ''}
+                  {u.confidence != null && ` · conf ${(u.confidence * 100).toFixed(0)}%`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MapPanel({ uirs, selectedId, onSelect }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -1918,6 +2049,12 @@ function App() {
               Incident
             </button>
             <button
+              className={`panel-tab ${rightTab === 'flags' ? 'active' : ''}`}
+              onClick={() => setRightTab('flags')}
+            >
+              Flags{flaggedCount > 0 && ` (${flaggedCount})`}
+            </button>
+            <button
               className={`panel-tab ${rightTab === 'ml' ? 'active' : ''}`}
               onClick={() => setRightTab('ml')}
             >
@@ -1925,10 +2062,20 @@ function App() {
             </button>
           </div>
           <div className="panel-tab-content">
-            {rightTab === 'incident'
-              ? <DetailPanel uir={selectedUir} onAction={handleAction} onSelectUir={id => { const found = uirs.find(u => u.uir_id === id); if (found) { setSelectedUir(found); setRightTab('incident'); } }} />
-              : <MLPanel />
-            }
+            {rightTab === 'incident' && (
+              <DetailPanel
+                uir={selectedUir}
+                onAction={handleAction}
+                onSelectUir={id => { const found = uirs.find(u => u.uir_id === id); if (found) { setSelectedUir(found); setRightTab('incident'); } }}
+              />
+            )}
+            {rightTab === 'flags' && (
+              <FlagsPanel
+                uirs={sortedUirs}
+                onSelectUir={id => { const found = uirs.find(u => u.uir_id === id); if (found) { setSelectedUir(found); setRightTab('incident'); } }}
+              />
+            )}
+            {rightTab === 'ml' && <MLPanel />}
           </div>
         </div>
       </div>
