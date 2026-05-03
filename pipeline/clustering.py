@@ -17,6 +17,40 @@ from collections import Counter
 from copy import deepcopy
 from typing import Optional
 
+"""
+CRITICAL = very strict (Only merge if almost identical)
+LOW = more relaxed (Can merge even if slightly different)
+"""
+"""
+Your system uses DBSCAN-style clustering, which works with:
+distance (smaller = closer)
+BUT your similarity functions give:
+similarity (bigger = closer)
+
+distance = 1 - similarity
+👉 High similarity → LOW distance
+👉 Low similarity → HIGH distance
+"""
+
+"""
+CRITICAL
+similarity = 0.80,distance = 0.20 ,0.20 > 0.15 → NOT allowed,Cannot merge,Because CRITICAL = life-threatening
+MAXIMUM distance allowed = 0.15
+distance ≤ 0.15
+→ similarity ≥ 0.85
+"""
+"""
+EPSILON is used inside the clustering decision
+EPSILON = maximum allowed distance
+If distance is small enough → candidate match
+If distance too big → ignore
+"""
+
+"""
+eps = self.epsilon[report['urgency']]
+if distance <= eps:
+eps = self.epsilon[report['urgency']]
+"""
 
 # ============================================================
 # EPSILON VALUES — Urgency-Sensitive
@@ -29,13 +63,17 @@ EPSILON = {
     'LOW':      0.30,   # min similarity 0.70  (raised from 0.60)
 }
 
+"""
+CRITICAL_GATE → strict rules (life-threatening cases)
+NON_CRITICAL_GATE → relaxed rules (normal cases)
+"""
 # Critical safety gate thresholds
 CRITICAL_GATE = {
-    'min_semantic': 0.88,
-    'max_distance_km': 0.8,
-    'max_time_gap_min': 15,
-    'min_corroborating_sources': 2,
-    'require_type_match': True,
+    'min_semantic': 0.88, # ≥ 0.88 Messages must be almost identical
+    'max_distance_km': 0.8, # ≤ 0.8 km Must be VERY close (same area)
+    'max_time_gap_min': 15, # ≤ 15 minutes Happened almost at same time
+    'min_corroborating_sources': 2, # ≥ 2 sources Need confirmation from multiple people
+    'require_type_match': True, # Must match flood ≠ fire ❌
 }
 
 NON_CRITICAL_GATE = {
@@ -43,7 +81,7 @@ NON_CRITICAL_GATE = {
     'max_distance_km': 3.0,
     'max_time_gap_min': 45,
     'min_corroborating_sources': 1,
-    'require_type_match': False,
+    'require_type_match': True,   # flood ≠ fire — never merge across types regardless of urgency
 }
 
 # If similarity score >= this threshold, force-merge even if safety gate blocked,
