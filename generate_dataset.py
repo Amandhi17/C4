@@ -1401,11 +1401,59 @@ def generate_for_type(incident_type, base_time, target_count=500):
     return [r for r, _ in raw], voice_count, sms_count
 
 
-def generate_dataset():
+def generate_coverage_for_type(incident_type, base_time, per_type: int = 2):
+    """
+    Generate `per_type` scenarios of EACH scenario type — guarantees every type
+    (mass_report, adjacent_critical, noise, victim_panic, cross_lingual_duplicate,
+    same_street_neighbors, ...) appears at least `per_type` times. No target-count
+    trimming. Used for building a small but fully representative test set.
+    """
+    all_scenarios = build_scenarios(incident_type)
+
+    # Group by scenario type and take the first `per_type` of each
+    by_type: dict = {}
+    for s in all_scenarios:
+        by_type.setdefault(s["type"], []).append(s)
+
+    picked = []
+    for t, group in by_type.items():
+        # Pair-types must include their partner (same location, sibling id) so
+        # the "MUST NOT merge" relationship is preserved in the test set.
+        if t in ("same_street_neighbors", "geographically_near"):
+            n = max(per_type, 2)
+            # Try to keep adjacent indices so paired locations stay paired
+            picked.extend(group[:n])
+        else:
+            picked.extend(group[:per_type])
+
+    raw = []
+    vc, sc = [0], [0]
+    voice_count, sms_count = 0, 0
+
+    for scenario in picked:
+        for i in range(scenario["report_count"]):
+            ch = "voice" if (voice_count <= sms_count) else "sms"
+            report, rt = generate_report(scenario, i, base_time, ch, incident_type, vc, sc)
+            raw.append((report, rt))
+            if ch == "voice":
+                voice_count += 1
+            else:
+                sms_count += 1
+
+    raw.sort(key=lambda x: x[1])
+    return [r for r, _ in raw], voice_count, sms_count
+
+
+def generate_dataset(total_reports: int = 1000, coverage: bool = False, per_type: int = 2):
     base_time = datetime(2025, 5, 17, 6, 0, 0, tzinfo=timezone.utc)
 
-    flood_reports,     fv, fs = generate_for_type("flood",     base_time,                       target_count=500)
-    fire_reports,      rv, rs = generate_for_type("fire",      base_time + timedelta(hours=1),  target_count=500)
+    if coverage:
+        flood_reports, fv, fs = generate_coverage_for_type("flood", base_time, per_type=per_type)
+        fire_reports,  rv, rs = generate_coverage_for_type("fire",  base_time + timedelta(hours=1), per_type=per_type)
+    else:
+        per_type = total_reports // 2
+        flood_reports, fv, fs = generate_for_type("flood", base_time,                      target_count=per_type)
+        fire_reports,  rv, rs = generate_for_type("fire",  base_time + timedelta(hours=1), target_count=total_reports - per_type)
     all_reports = flood_reports + fire_reports
 
     lang_counts     = Counter(r["_ground_truth"]["language"]      for r in all_reports)
@@ -1439,11 +1487,33 @@ def generate_dataset():
 
 
 if __name__ == "__main__":
-    print("Generating C4 evaluation dataset (1000 reports)...")
-    dataset = generate_dataset()
+    import argparse
+    ap = argparse.ArgumentParser(description="Generate C4 disaster report dataset")
+    ap.add_argument("--seed", type=int, default=42,
+                    help="RNG seed (default: 42 — change to draw a different dataset)")
+    ap.add_argument("--out", default="data/disaster_dataset_1000.json",
+                    help="Output JSON path")
+    ap.add_argument("--total", type=int, default=1000,
+                    help="Total number of reports to generate (split 50/50 flood/fire)")
+    ap.add_argument("--coverage", action="store_true",
+                    help="Coverage mode: include scenarios of EVERY type "
+                         "(produces ~250 reports with --per-type 2). Ignores --total.")
+    ap.add_argument("--per-type", type=int, default=2,
+                    help="In --coverage mode: how many scenarios per type "
+                         "(default 2 → ~250 reports; 1 → ~140; 3 → ~360)")
+    args = ap.parse_args()
 
-    os.makedirs("data", exist_ok=True)
-    out = "data/disaster_dataset_1000.json"
+    random.seed(args.seed)
+    if args.coverage:
+        print(f"Generating C4 COVERAGE test set ({args.per_type} of each scenario type)...")
+    else:
+        print(f"Generating C4 evaluation dataset ({args.total} reports, seed={args.seed})...")
+    dataset = generate_dataset(total_reports=args.total, coverage=args.coverage, per_type=args.per_type)
+    dataset["metadata"]["seed"] = args.seed
+    dataset["metadata"]["coverage_mode"] = args.coverage
+
+    out = args.out
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         json.dump(dataset, f, ensure_ascii=False, indent=2, default=str)
 

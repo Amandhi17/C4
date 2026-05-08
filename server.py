@@ -1,10 +1,36 @@
 """
 C4 Dashboard Server — Run: python server.py — Open: http://localhost:8000
+
+Optional flags (mutually exclusive validation modes):
+  --train PATH --test PATH   Train ML on PATH (train.json), run dashboard on
+                             PATH (test.json). Two separate physical files.
+  --split-ratio 0.8          Or: split a single dataset by incident_id at load
+                             time (random with --split-seed, reproducible).
 """
-import json, sys, os, time, warnings
+import argparse, json, sys, os, time, warnings
 from datetime import datetime, timezone
 from pathlib import Path
 from collections import Counter
+
+# Parse CLI flags before any heavy imports / data loads
+_ap = argparse.ArgumentParser(add_help=False)
+_ap.add_argument("--train", type=str, default=None,
+                 help="Path to training dataset JSON (used to fit MLDedup)")
+_ap.add_argument("--test", type=str, default=None,
+                 help="Path to testing dataset JSON (shown on the dashboard)")
+_ap.add_argument("--split-ratio", type=float, default=None,
+                 help="Alternative: split a single dataset by incident_id "
+                      "(use instead of --train/--test).")
+_ap.add_argument("--split-seed", type=int, default=42,
+                 help="Seed for --split-ratio mode (default: 42)")
+SPLIT_ARGS, _UNKNOWN_ARGS = _ap.parse_known_args()
+
+if (SPLIT_ARGS.train and not SPLIT_ARGS.test) or (SPLIT_ARGS.test and not SPLIT_ARGS.train):
+    print("ERROR: --train and --test must be used together.")
+    sys.exit(1)
+if SPLIT_ARGS.train and SPLIT_ARGS.split_ratio is not None:
+    print("ERROR: use --train/--test OR --split-ratio, not both.")
+    sys.exit(1)
 
 warnings.filterwarnings("ignore", message="X does not have valid feature names")
 warnings.filterwarnings("ignore", message=r".*sklearn\.utils\.parallel\.delayed.*")
@@ -42,49 +68,93 @@ print("=" * 55)
 print("  C4 PIPELINE — LOADING DATA")
 print("=" * 55)
 
-DPATH = ROOT / "data" / "disaster_dataset_1000.json"
-if not DPATH.exists():
-    print(f"  Dataset not found: {DPATH}")
-    print(f"  Run: python generate_dataset.py")
-    sys.exit(1)
+def _load_and_prep(path: Path) -> list:
+    """Load a dataset JSON and run normalize, resolve, embed."""
+    if not path.exists():
+        print(f"  Dataset not found: {path}")
+        print(f"  Run: python generate_dataset.py --out {path}")
+        sys.exit(1)
+    with open(path, "r", encoding="utf-8") as f:
+        ds = json.load(f)
+    print(f"  Loaded {len(ds['reports'])} reports from {path.name} "
+          f"({ds['metadata'].get('incident_types', [])})")
+    return embed_batch(resolve_batch(normalize_batch(ds["reports"])))
 
-with open(DPATH, "r", encoding="utf-8") as f:
-    dataset = json.load(f)
-print(f"  Loaded {len(dataset['reports'])} reports ({dataset['metadata'].get('incident_types',[])})")
 
 reset_counters()
 t0 = time.time()
-normalized = normalize_batch(dataset["reports"])
-resolved = resolve_batch(normalized)
-embedded = embed_batch(resolved)
 
 FEEDBACK_LOGGER = FeedbackLogger(ROOT / "data")
 SIMILARITY_MODEL = LearnedSimilarityModel(ROOT / "data")
+
+# Three startup modes:
+#   1. --train + --test  →  separate physical files, no overlap, fully explicit
+#   2. --split-ratio     →  split a single dataset by incident_id at load time
+#   3. (default)         →  load data/disaster_dataset_1000.json, use for both
+SPLIT_MODE = False
+
+if SPLIT_ARGS.train and SPLIT_ARGS.test:
+    SPLIT_MODE = True
+    print("  [SPLIT MODE] Two-file training/testing mode")
+    train_for_ml = _load_and_prep(Path(SPLIT_ARGS.train))
+    process_through_engine = _load_and_prep(Path(SPLIT_ARGS.test))
+    train_iids = {r['_ground_truth']['incident_id'] for r in train_for_ml}
+    test_iids  = {r['_ground_truth']['incident_id'] for r in process_through_engine}
+    print(f"  [SPLIT MODE] Train: {len(train_for_ml):4d} reports / "
+          f"{len(train_iids):3d} incident IDs  →  fits MLDedup")
+    print(f"  [SPLIT MODE] Test:  {len(process_through_engine):4d} reports / "
+          f"{len(test_iids):3d} incident IDs  →  goes to dashboard")
+    embedded = train_for_ml  # for endpoints that need a reference set
+
+elif SPLIT_ARGS.split_ratio is not None:
+    SPLIT_MODE = True
+    DPATH = ROOT / "data" / "disaster_dataset_1000.json"
+    embedded = _load_and_prep(DPATH)
+    from pipeline.dataset_split import split_by_incident, split_summary
+    train_for_ml, process_through_engine = split_by_incident(
+        embedded, ratio=SPLIT_ARGS.split_ratio, seed=SPLIT_ARGS.split_seed
+    )
+    s = split_summary(train_for_ml, process_through_engine)
+    print(f"  [SPLIT MODE] In-memory split  ratio={SPLIT_ARGS.split_ratio}  "
+          f"seed={SPLIT_ARGS.split_seed}")
+    print(f"  [SPLIT MODE] Train: {s['train_reports']:4d} reports / "
+          f"{s['train_incidents']:3d} incidents")
+    print(f"  [SPLIT MODE] Test:  {s['test_reports']:4d} reports / "
+          f"{s['test_incidents']:3d} incidents  (these go to the dashboard)")
+
+else:
+    DPATH = ROOT / "data" / "disaster_dataset_1000.json"
+    embedded = _load_and_prep(DPATH)
+    train_for_ml = embedded
+    process_through_engine = embedded
+
 print(f"  {SIMILARITY_MODEL.status_line()}")
 
 # ML Deduplicator — train all models and pick the best by AUC
 ML_DEDUP = init_deduplicator(ROOT / "data")
 print("  Training ML deduplicator (XGBoost / Random Forest / LightGBM)...")
-ML_DEDUP.train_compare(embedded)
+ML_DEDUP.train_compare(train_for_ml)
 
 # Inject the best model as the live deduplicator
 set_similarity_model(ML_DEDUP)
 best = ML_DEDUP.comparison.get('best', 'unknown') if ML_DEDUP.comparison else 'unknown'
 print(f"  [Dedup] Best model active: {best}")
 
-# Keep reference for retraining
-EMBEDDED_REPORTS = embedded
+# Keep reference for retraining (the model trains on what it was originally trained on)
+EMBEDDED_REPORTS = train_for_ml
 
 # Database (optional — connect if DATABASE_URL is set)
 DB = init_db()
 
 ENGINE = IncidentClusterEngine()
-for r in embedded:
+for r in process_through_engine:
     ENGINE.process_report(r)
 
 active = [u for u in ENGINE.active_uirs if u["status"] == "active"]
 ev = evaluate_clustering(ENGINE)
-print(f"  Done in {time.time()-t0:.2f}s | UIRs: {len(active)} | Precision: {ev['precision']:.4f} | CritFMR: {ev['critical_false_merge_rate']:.4f}")
+mode_tag = "  [SPLIT MODE — dashboard shows TEST set only]" if SPLIT_MODE else ""
+print(f"  Done in {time.time()-t0:.2f}s | UIRs: {len(active)} | "
+      f"Precision: {ev['precision']:.4f} | CritFMR: {ev['critical_false_merge_rate']:.4f}{mode_tag}")
 
 # Store to DB if connected
 if DB and DB.connected:
@@ -137,7 +207,7 @@ uo = {"CRITICAL":0,"HIGH":1,"MEDIUM":2,"LOW":3}
 active.sort(key=lambda u: uo.get(u["urgency"],4))
 ALL_UIRS = [serialize_uir(u) for u in active]
 
-STATS = {"total_reports": len(dataset["reports"]), "active_uirs": len(active),
+STATS = {"total_reports": len(process_through_engine), "active_uirs": len(active),
          "flagged_uirs": sum(1 for u in active if u["flags"]),
          "precision": ev["precision"], "recall": ev["recall"], "critical_fmr": ev["critical_false_merge_rate"],
          "flood_uirs": sum(1 for u in active if u["incident_type"]=="flood"),
@@ -373,6 +443,28 @@ async def db_nearby(lat: float, lng: float, radius_km: float = 5.0):
         return {"error": "database not connected"}
     rows = DB.find_nearby_uirs(lat, lng, radius_km)
     return {"results": [dict(r) for r in rows], "count": len(rows)}
+
+@app.get("/api/split")
+async def split_info():
+    """Reports whether the server is running in train/test split mode."""
+    if not SPLIT_MODE:
+        return {"split_mode": False, "n_reports": len(EMBEDDED_REPORTS)}
+    info = {
+        "split_mode": True,
+        "train_reports":   len(train_for_ml),
+        "train_incidents": len({r['_ground_truth']['incident_id'] for r in train_for_ml}),
+        "test_reports":    len(process_through_engine),
+        "test_incidents":  len({r['_ground_truth']['incident_id'] for r in process_through_engine}),
+    }
+    if SPLIT_ARGS.train and SPLIT_ARGS.test:
+        info["mode"] = "two_file"
+        info["train_path"] = SPLIT_ARGS.train
+        info["test_path"] = SPLIT_ARGS.test
+    else:
+        info["mode"] = "in_memory_split"
+        info["ratio"] = SPLIT_ARGS.split_ratio
+        info["seed"] = SPLIT_ARGS.split_seed
+    return info
 
 @app.get("/")
 async def dashboard():
