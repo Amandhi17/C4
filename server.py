@@ -20,7 +20,7 @@ try:
 except ImportError:
     pass  # python-dotenv not installed — rely on shell environment
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException  #WebSocket import added here
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
