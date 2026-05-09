@@ -282,6 +282,21 @@ def resolve_conflict(field: str, uir: dict, new_report: dict) -> dict:
     if field == 'people_involved':
         existing_val = uir.get('people_involved', {}).get('value')
         new_val = new_report.get('people_involved')
+        # Asymmetric error cost in emergency dispatch: under-counting stranded
+        # people risks under-resourcing the response. Prefer MAX over recency
+        # for this field — mirrors the urgency_escalation pattern below.
+        # The ⚠ conflict flag is still raised by detect_conflicts() so the
+        # operator sees both source values on drill-down.
+        try:
+            if existing_val is not None and new_val is not None:
+                return {'value': max(int(existing_val), int(new_val)),
+                        'resolved': True, 'method': 'max_for_safety'}
+        except (TypeError, ValueError):
+            pass
+        if existing_val is None and new_val is not None:
+            return {'value': new_val, 'resolved': True, 'method': 'max_for_safety'}
+        if new_val is None and existing_val is not None:
+            return {'value': existing_val, 'resolved': True, 'method': 'max_for_safety'}
     elif field == 'urgency':
         existing_val = uir.get('urgency')
         new_val = new_report.get('urgency')

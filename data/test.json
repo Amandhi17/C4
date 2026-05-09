@@ -7692,7 +7692,7 @@
       },
       {
         "incident_type": "flood",
-        "location_raw": "No. 142, Athurugiriya Road, Kaduwela",
+        "location_raw": "142 Athurugiriya Road, Kaduwela",
         "urgency": "CRITICAL",
         "people_involved": 4,
         "confidence": 0.86,
@@ -7870,13 +7870,13 @@
       },
       {
         "incident_type": "flood",
-        "location_raw": "මාස්කෙළිය පාර, හැටන්",
+        "location_raw": "ගල්හා පාර, පේරාදෙණිය",
         "urgency": "CRITICAL",
-        "people_involved": 3,
+        "people_involved": 5,
         "confidence": 0.78,
         "key_phrases": [
-          "හැටන් මාස්කෙළිය පාර වළ කන්දක්",
-          "තුන් දෙනෙක් කටු යට හිර වෙලා",
+          "පේරාදෙණිය ගල්හා පාර ගංවතුර",
+          "පහ දෙනෙක් ගේ ඇතුලේ හිර වෙලා",
           "හදිසි උදව් අවශ්‍යයි"
         ],
         "timestamp": "2026-05-08T09:00:00+00:00",
@@ -7884,57 +7884,57 @@
         "channel": "sms",
         "receive_time": "2026-05-08T09:00:01.000000+00:00",
         "_ground_truth": {
-          "incident_id": "DEMO_LANDSLIDE_001",
-          "actual_location": "Hatton - Maskeliya Road",
+          "incident_id": "DEMO_FLOOD_004",
+          "actual_location": "Peradeniya - Galaha Road",
           "actual_urgency": "CRITICAL",
-          "actual_people": 3,
+          "actual_people": 5,
           "incident_type": "flood",
           "language": "sinhala",
           "scenario_type": "long_gap",
-          "district": "Nuwara Eliya",
+          "district": "Kandy",
           "province": "Central",
-          "lat": 6.89170,
-          "lng": 80.59560
+          "lat": 7.27000,
+          "lng": 80.60000
         }
       },
       {
         "incident_type": "flood",
-        "location_raw": "Maskeliya Road, Hatton",
+        "location_raw": "Galaha Road, Peradeniya",
         "urgency": "CRITICAL",
-        "people_involved": 3,
+        "people_involved": 5,
         "confidence": 0.82,
         "key_phrases": [
-          "Hatton Maskeliya road eke wala kandak watile",
-          "thawamath thun dena katu yata",
+          "Peradeniya Galaha road watura wedila",
+          "thawamath pas dena gedara hira",
           "ikmanata adhar ewanna"
         ],
         "timestamp": "2026-05-08T12:15:00+00:00",
         "source_id": "demo_call_005",
         "channel": "voice",
         "receive_time": "2026-05-08T12:15:01.000000+00:00",
-        "transcript": "Sir Hatton Maskeliya road eke ude wage wala kandak watunu eka thama hari karala ne. Mage nangiye family thama katu yata innawa, thun dena. Karunakara ikmanata aadhar ewanna.",
+        "transcript": "Sir Peradeniya Galaha road eke ude wage flood eka thama hari karala ne. Mage nangiye family thama gedara hira welawenna innawa, pas dena. Watura ihalata ena. Karunakara ikmanata aadhar ewanna.",
         "_ground_truth": {
-          "incident_id": "DEMO_LANDSLIDE_001",
-          "actual_location": "Hatton - Maskeliya Road",
+          "incident_id": "DEMO_FLOOD_004",
+          "actual_location": "Peradeniya - Galaha Road",
           "actual_urgency": "CRITICAL",
-          "actual_people": 3,
+          "actual_people": 5,
           "incident_type": "flood",
           "language": "romanized_sinhala",
           "scenario_type": "long_gap",
-          "district": "Nuwara Eliya",
+          "district": "Kandy",
           "province": "Central",
-          "lat": 6.89250,
-          "lng": 80.59640
+          "lat": 7.27080,
+          "lng": 80.60080
         }
       },
       {
         "incident_type": "flood",
-        "location_raw": "Kotte, near Parliament Junction",
-        "urgency": "HIGH",
+        "location_raw": "Battaramulla, near Parliament Road",
+        "urgency": "CRITICAL",
         "people_involved": 20,
         "confidence": 0.69,
         "key_phrases": [
-          "Kotte Parliament junction langa flood",
+          "Battaramulla Parliament paara langa flood",
           "20 ka pamana minissu hira",
           "mulu paaramath watura"
         ],
@@ -7942,29 +7942,29 @@
         "source_id": "demo_call_006",
         "channel": "voice",
         "receive_time": "2026-05-08T08:15:01.000000+00:00",
-        "transcript": "Sir mama Kotte Parliament junction langa innne. Mulu paaramath watura. Pahala wala innne 20 ka pamana minissu hira welawelaa innawa. Karunakara ikmanata aadhar ewanna.",
+        "transcript": "Sir mama Battaramulla Parliament paara langa innne. Mulu paaramath watura. Pahala wala innne 20 ka pamana minissu hira welawelaa innawa. Karunakara ikmanata aadhar ewanna.",
         "_ground_truth": {
           "incident_id": "DEMO_FLOOD_002",
-          "actual_location": "Kotte",
-          "actual_urgency": "HIGH",
+          "actual_location": "Battaramulla",
+          "actual_urgency": "CRITICAL",
           "actual_people": 18,
           "incident_type": "flood",
           "language": "romanized_sinhala",
           "scenario_type": "conflicting_counts",
           "district": "Colombo",
           "province": "Western",
-          "lat": 6.89380,
-          "lng": 79.91850
+          "lat": 6.89900,
+          "lng": 79.91830
         }
       },
       {
         "incident_type": "flood",
-        "location_raw": "කෝට්ටේ, පාර්ලිමේන්තු හන්දිය",
+        "location_raw": "බත්තරමුල්ල, පාර්ලිමේන්තු පාර ළඟ",
         "urgency": "CRITICAL",
         "people_involved": 5,
         "confidence": 0.83,
         "key_phrases": [
-          "කෝට්ටේ පාර්ලිමේන්තු හන්දිය ගංවතුර",
+          "බත්තරමුල්ල පාර්ලිමේන්තු පාර ළඟ ගංවතුර",
           "අපේ ගෙදර පහ දෙනෙක් ඉන්නවා",
           "ගේට වතුර ආවා"
         ],
@@ -7974,7 +7974,7 @@
         "receive_time": "2026-05-08T08:18:01.000000+00:00",
         "_ground_truth": {
           "incident_id": "DEMO_FLOOD_002",
-          "actual_location": "Kotte",
+          "actual_location": "Battaramulla",
           "actual_urgency": "CRITICAL",
           "actual_people": 18,
           "incident_type": "flood",
@@ -7982,14 +7982,14 @@
           "scenario_type": "conflicting_counts",
           "district": "Colombo",
           "province": "Western",
-          "lat": 6.89420,
-          "lng": 79.91920
+          "lat": 6.89920,
+          "lng": 79.91870
         }
       },
       {
         "incident_type": "fire",
         "location_raw": "88 Lake Drive, Dehiwala",
-        "urgency": "HIGH",
+        "urgency": "CRITICAL",
         "people_involved": null,
         "confidence": 0.71,
         "key_phrases": [
@@ -8005,7 +8005,7 @@
         "_ground_truth": {
           "incident_id": "DEMO_FIRE_003",
           "actual_location": "Dehiwala - 88 Lake Drive",
-          "actual_urgency": "HIGH",
+          "actual_urgency": "CRITICAL",
           "actual_people": 4,
           "incident_type": "fire",
           "language": "romanized_sinhala",
@@ -8077,32 +8077,32 @@
       },
       {
         "incident_type": "fire",
-        "location_raw": "12 Tunnel Road, Pannipitiya",
+        "location_raw": "අංක 18, නාවල පාර, නුගේගොඩ",
         "urgency": "HIGH",
         "people_involved": 3,
         "confidence": 0.77,
         "key_phrases": [
-          "12 Tunnel Road Pannipitiya",
-          "ape pawule ge ginigena",
-          "thun dena gedara atule"
+          "අංක 18 නාවල පාර නුගේගොඩ",
+          "අපේ ගෙදර ගිනිගෙන",
+          "තුන් දෙනෙක් ගෙදර ඇතුලේ"
         ],
-        "timestamp": "2026-05-08T09:03:00+00:00",
+        "timestamp": "2026-05-08T09:25:00+00:00",
         "source_id": "demo_call_009",
         "channel": "voice",
-        "receive_time": "2026-05-08T09:03:01.000000+00:00",
-        "transcript": "Sir Pannipitiya 12 Tunnel Road eke ape pawule ge ekak ginigena. Thun dena gedara atule innawa. Wiruddwa weasenkar yannada bari. Fire brigade ikmanata ewanna karunakara.",
+        "receive_time": "2026-05-08T09:25:01.000000+00:00",
+        "transcript": "සර් නුගේගොඩ නාවල පාරේ අංක 18 අපේ ගෙදර ගිනිගෙන. තුන් දෙනෙක් ගෙදර ඇතුලේ ඉන්නවා. පිට වෙන්න බැරි. ගිනි නිවන රථයක් ඉක්මනින් එවන්න.",
         "_ground_truth": {
           "incident_id": "DEMO_FIRE_005",
-          "actual_location": "Pannipitiya - 12 Tunnel Rd",
+          "actual_location": "Nugegoda - 18 Nawala Road",
           "actual_urgency": "HIGH",
           "actual_people": 3,
           "incident_type": "fire",
-          "language": "romanized_sinhala",
+          "language": "sinhala",
           "scenario_type": "geographically_near",
           "district": "Colombo",
           "province": "Western",
-          "lat": 6.84510,
-          "lng": 79.94470
+          "lat": 6.87700,
+          "lng": 79.89200
         }
       },
       {
@@ -8172,55 +8172,56 @@
   
   
   "_demo_reports_for_dedup": {
-    "_comment": "Demo reports for mid-evaluation dedup demo. NOT loaded by server.py (which only reads top-level `reports`). To run the demo: copy any subset of these into the `reports` array above, then restart the server. Each report carries a specific street address + family/landmark to make the dedup decision unambiguous. Expected behaviour is described in `expected_clusters`.",
+    "_comment": "Demo reports for mid-evaluation dedup demo. NOT loaded by server.py (which only reads top-level `reports`). To run the demo: copy any subset of these into the `reports` array above, then restart the server. Each report carries a specific street address + family/landmark to make the dedup decision unambiguous. NOTE ON TIME: all `timestamp` and `receive_time` fields in the report objects are in UTC (suffix +00:00). The expected_clusters notes below quote times in SLST (Sri Lanka Standard Time = UTC+5:30) so they match what the dashboard shows the operator. Conversion: SLST = UTC + 5h30m. Expected behaviour is described in `expected_clusters`.",
     "expected_clusters": [
       {
-        "cluster": "Kaduwela flood (~06:30, 8 May 2026)",
+        "cluster": "Kaduwela flood — same-family auto-merge + same-street split (~12:00 SLST, 8 May 2026)",
         "report_ids": ["demo_call_001", "demo_sms_001", "demo_call_002"],
-        "note": "Three reports about the same flood event. demo_call_001 (voice, Romanized Sinhala) and demo_sms_001 (SMS, Sinhala) are the SAME family — Mr. Perera at 142 Athurugiriya Road (husband called, wife texted shortly after). demo_call_002 (voice, Tamil) is the Raman family at 145 Athurugiriya Road — the next-door neighbour. All three merge into ONE incident cluster: same flood event affecting adjacent houses. Distinct addresses are preserved as separate sources inside the cluster, so dispatchers can see exactly which houses need rescue."
+        "expected_uirs": 2,
+        "note": "Three reports from the same Kaduwela flood event, but the system makes a nuanced two-tier decision rather than blindly merging all three. (1) demo_call_001 (voice, Romanized Sinhala) + demo_sms_001 (SMS, Sinhala) AUTO-MERGE into one cluster — both are the Perera family at the SAME address (142 Athurugiriya Road); husband called, wife texted 2 minutes later. Identical address + cross-channel + cross-script ⇒ system is confident it's one household. (2) demo_call_002 (voice, Tamil — Raman family at 145 Athurugiriya Road, the next-door neighbour) STAYS AS A SEPARATE CLUSTER. Same street, but a different house number. The system's `geo_str_divergence` feature fires high here (identical geocoded coordinates but different address strings) — exactly the same_street_neighbors signal it was trained to respect. Conservative-when-uncertain is the right triage posture: the operator can manually merge if they know it's a wide-area flood, and that merge action becomes a training example for the similarity model. Demonstrates BOTH aggressive same-household dedup AND disciplined between-household caution in one cluster. Expected: 2 UIRs (not 1)."
       },
       {
-        "cluster": "Maharagama fire (~07:10, 8 May 2026)",
+        "cluster": "Maharagama fire (~12:40 SLST, 8 May 2026)",
         "report_ids": ["demo_call_003", "demo_sms_002"],
         "note": "Two reports about the SAME house fire at 27 Galwala Road, Maharagama (Fernando family) — Sinhala voice call from a neighbour, Romanized Sinhala SMS from a passer-by. Identical street address proves it's the same incident. Should merge into ONE cluster."
       },
       {
-        "cluster": "Negombo fire (~07:45, 8 May 2026)",
+        "cluster": "Negombo fire (~13:15 SLST, 8 May 2026)",
         "report_ids": ["demo_call_004"],
         "note": "Distinct incident — Silva Stores at Wewala Junction, Negombo (a shop fire, not a house). Different city, different landmark, different building type. Must NOT merge with Maharagama fire."
       },
       {
-        "cluster": "Hatton landslide — long_gap (~09:00 then 12:15, 8 May 2026)",
+        "cluster": "Peradeniya flood — long_gap (~14:30 then 17:45 SLST, 8 May 2026)",
         "report_ids": ["demo_sms_003", "demo_call_005"],
-        "note": "Same landslide reported 3 hours apart on Maskeliya Road, Hatton (Central Province, Nuwara Eliya district — landslide-prone hill country). demo_sms_003 (SMS, Sinhala) at 09:00 raises alarm. demo_call_005 (voice, Romanized Sinhala) at 12:15 is a follow-up update — same address, same incident. Should merge despite long temporal gap (tests time-tolerant dedup)."
+        "note": "Same flood reported 3 hours apart on Galaha Road, Peradeniya (Central Province, Kandy district — flood-prone area near the Mahaweli River). demo_sms_003 (SMS, Sinhala) at 14:30 SLST raises alarm — 5 family members trapped at home as flood waters rise. demo_call_005 (voice, Romanized Sinhala) at 17:45 SLST is a follow-up update — 3 hours later, situation unchanged. Same address, same incident. Should merge despite long temporal gap (tests time-tolerant dedup)."
       },
       {
-        "cluster": "Kotte flood — conflicting_counts (~08:15, 8 May 2026)",
+        "cluster": "Battaramulla flood — conflicting_counts (~13:45 SLST, 8 May 2026)",
         "report_ids": ["demo_call_006", "demo_sms_004"],
-        "note": "Same Kotte flood reported by two people with very different people counts (20 vs 5). The bystander (demo_call_006) estimates the whole street is affected; the victim (demo_sms_004) reports only their own household. Same incident — should merge despite numeric mismatch (tests robustness to count noise)."
+        "note": "Same Battaramulla flood (near Parliament Road) reported by two people with very different people counts (20 vs 5). The bystander (demo_call_006) estimates the whole street is affected; the victim (demo_sms_004) reports only their own household. Same incident — should merge despite numeric mismatch (tests robustness to count noise)."
       },
       {
-        "cluster": "Dehiwala fire — third_party + victim (~08:30, 8 May 2026)",
+        "cluster": "Dehiwala fire — third_party + victim (~14:00 SLST, 8 May 2026)",
         "report_ids": ["demo_call_007", "demo_sms_005"],
         "note": "Same fire at 88 Lake Drive, Dehiwala. demo_call_007 (voice, Romanized Sinhala) is from a passer-by who doesn't know the residents. demo_sms_005 (SMS, Sinhala) is from the victim family inside. Different speaker perspectives, same incident — should merge."
       },
       {
-        "cluster": "Nugegoda + Pannipitiya fires — geographically_near NEGATIVE (~09:00, 8 May 2026)",
+        "cluster": "Two Nugegoda fires — same_town_distinct_incidents NEGATIVE (~14:30 then 14:55 SLST, 8 May 2026)",
         "report_ids": ["demo_call_008", "demo_call_009"],
-        "note": "Two SEPARATE fires within ~5km of each other. demo_call_008 is a shop fire at 45 High Level Road, Nugegoda. demo_call_009 is a house fire at 12 Tunnel Road, Pannipitiya. Same time-window, similar incident type, geographically near — but distinct addresses, distinct buildings. Must NOT merge — must produce 2 separate clusters."
+        "note": "Two SEPARATE fires in the SAME town (Nugegoda), 25 minutes apart, in different languages and at different addresses. demo_call_008 (Romanized Sinhala voice, 14:30 SLST) is a shop fire at 45 High Level Road, Nugegoda (Maliban store, 2 staff stuck). demo_call_009 (Sinhala voice, 14:55 SLST) is a family house fire at 18 Nawala Road, Nugegoda (3 family members trapped). Both reports geocode to the same Nugegoda centroid because the gazetteer doesn't have street-level detail. Three discriminators must combine to keep them apart: (1) `geo_str_divergence` — same coords, different address strings; (2) `cross_lingual` — Romanized vs Sinhala; (3) `time_sim` decay — 25 min gap drops time similarity from 0.86 to ~0.29. Should NOT auto-merge. Likely produces a `possible_duplicate_nearby` flag with a `linked_uirs` reference between the two UIRs — the gray-zone correct behavior. This is the cleanest demo of the system's three-tier decision: auto-merge / possible duplicate / clearly separate."
       },
       {
-        "cluster": "Location-unknown panic call (~09:30, 8 May 2026)",
+        "cluster": "Location-unknown panic call (~15:00 SLST, 8 May 2026)",
         "report_ids": ["demo_call_010"],
         "note": "Panicked caller (demo_call_010) cannot specify their location. Vague reference to 'gam paara langa'. Should remain a singleton with low confidence — flagged for operator review, not auto-merged with any existing cluster."
       },
       {
-        "cluster": "Minimal SMS (~09:40, 8 May 2026)",
+        "cluster": "Minimal SMS (~15:10 SLST, 8 May 2026)",
         "report_ids": ["demo_sms_006"],
         "note": "SMS containing only 'fire help kelaniya' — minimal information. Tests how the system handles low-info reports. Should remain a singleton with low confidence (insufficient signal to merge with any existing fire cluster)."
       },
       {
-        "cluster": "Noise / false report (~09:50, 8 May 2026)",
+        "cluster": "Noise / false report (~15:20 SLST, 8 May 2026)",
         "report_ids": ["demo_call_011"],
         "note": "Junk audio — mic test / repeated test phrases / no actual incident content. Must be flagged as noise and NOT merged with any legitimate cluster (tests robustness to garbage input)."
       }
@@ -8228,7 +8229,7 @@
     "reports": [
       {
         "incident_type": "flood",
-        "location_raw": "No. 142, Athurugiriya Road, Kaduwela",
+        "location_raw": "142 Athurugiriya Road, Kaduwela",
         "urgency": "CRITICAL",
         "people_involved": 4,
         "confidence": 0.86,
@@ -8406,13 +8407,13 @@
       },
       {
         "incident_type": "flood",
-        "location_raw": "මාස්කෙළිය පාර, හැටන්",
+        "location_raw": "ගල්හා පාර, පේරාදෙණිය",
         "urgency": "CRITICAL",
-        "people_involved": 3,
+        "people_involved": 5,
         "confidence": 0.78,
         "key_phrases": [
-          "හැටන් මාස්කෙළිය පාර වළ කන්දක්",
-          "තුන් දෙනෙක් කටු යට හිර වෙලා",
+          "පේරාදෙණිය ගල්හා පාර ගංවතුර",
+          "පහ දෙනෙක් ගේ ඇතුලේ හිර වෙලා",
           "හදිසි උදව් අවශ්‍යයි"
         ],
         "timestamp": "2026-05-08T09:00:00+00:00",
@@ -8420,57 +8421,57 @@
         "channel": "sms",
         "receive_time": "2026-05-08T09:00:01.000000+00:00",
         "_ground_truth": {
-          "incident_id": "DEMO_LANDSLIDE_001",
-          "actual_location": "Hatton - Maskeliya Road",
+          "incident_id": "DEMO_FLOOD_004",
+          "actual_location": "Peradeniya - Galaha Road",
           "actual_urgency": "CRITICAL",
-          "actual_people": 3,
+          "actual_people": 5,
           "incident_type": "flood",
           "language": "sinhala",
           "scenario_type": "long_gap",
-          "district": "Nuwara Eliya",
+          "district": "Kandy",
           "province": "Central",
-          "lat": 6.89170,
-          "lng": 80.59560
+          "lat": 7.27000,
+          "lng": 80.60000
         }
       },
       {
         "incident_type": "flood",
-        "location_raw": "Maskeliya Road, Hatton",
+        "location_raw": "Galaha Road, Peradeniya",
         "urgency": "CRITICAL",
-        "people_involved": 3,
+        "people_involved": 5,
         "confidence": 0.82,
         "key_phrases": [
-          "Hatton Maskeliya road eke wala kandak watile",
-          "thawamath thun dena katu yata",
+          "Peradeniya Galaha road watura wedila",
+          "thawamath pas dena gedara hira",
           "ikmanata adhar ewanna"
         ],
         "timestamp": "2026-05-08T12:15:00+00:00",
         "source_id": "demo_call_005",
         "channel": "voice",
         "receive_time": "2026-05-08T12:15:01.000000+00:00",
-        "transcript": "Sir Hatton Maskeliya road eke ude wage wala kandak watunu eka thama hari karala ne. Mage nangiye family thama katu yata innawa, thun dena. Karunakara ikmanata aadhar ewanna.",
+        "transcript": "Sir Peradeniya Galaha road eke ude wage flood eka thama hari karala ne. Mage nangiye family thama gedara hira welawenna innawa, pas dena. Watura ihalata ena. Karunakara ikmanata aadhar ewanna.",
         "_ground_truth": {
-          "incident_id": "DEMO_LANDSLIDE_001",
-          "actual_location": "Hatton - Maskeliya Road",
+          "incident_id": "DEMO_FLOOD_004",
+          "actual_location": "Peradeniya - Galaha Road",
           "actual_urgency": "CRITICAL",
-          "actual_people": 3,
+          "actual_people": 5,
           "incident_type": "flood",
           "language": "romanized_sinhala",
           "scenario_type": "long_gap",
-          "district": "Nuwara Eliya",
+          "district": "Kandy",
           "province": "Central",
-          "lat": 6.89250,
-          "lng": 80.59640
+          "lat": 7.27080,
+          "lng": 80.60080
         }
       },
       {
         "incident_type": "flood",
-        "location_raw": "Kotte, near Parliament Junction",
-        "urgency": "HIGH",
+        "location_raw": "Battaramulla, near Parliament Road",
+        "urgency": "CRITICAL",
         "people_involved": 20,
         "confidence": 0.69,
         "key_phrases": [
-          "Kotte Parliament junction langa flood",
+          "Battaramulla Parliament paara langa flood",
           "20 ka pamana minissu hira",
           "mulu paaramath watura"
         ],
@@ -8478,29 +8479,29 @@
         "source_id": "demo_call_006",
         "channel": "voice",
         "receive_time": "2026-05-08T08:15:01.000000+00:00",
-        "transcript": "Sir mama Kotte Parliament junction langa innne. Mulu paaramath watura. Pahala wala innne 20 ka pamana minissu hira welawelaa innawa. Karunakara ikmanata aadhar ewanna.",
+        "transcript": "Sir mama Battaramulla Parliament paara langa innne. Mulu paaramath watura. Pahala wala innne 20 ka pamana minissu hira welawelaa innawa. Karunakara ikmanata aadhar ewanna.",
         "_ground_truth": {
           "incident_id": "DEMO_FLOOD_002",
-          "actual_location": "Kotte",
-          "actual_urgency": "HIGH",
+          "actual_location": "Battaramulla",
+          "actual_urgency": "CRITICAL",
           "actual_people": 18,
           "incident_type": "flood",
           "language": "romanized_sinhala",
           "scenario_type": "conflicting_counts",
           "district": "Colombo",
           "province": "Western",
-          "lat": 6.89380,
-          "lng": 79.91850
+          "lat": 6.89900,
+          "lng": 79.91830
         }
       },
       {
         "incident_type": "flood",
-        "location_raw": "කෝට්ටේ, පාර්ලිමේන්තු හන්දිය",
+        "location_raw": "බත්තරමුල්ල, පාර්ලිමේන්තු පාර ළඟ",
         "urgency": "CRITICAL",
         "people_involved": 5,
         "confidence": 0.83,
         "key_phrases": [
-          "කෝට්ටේ පාර්ලිමේන්තු හන්දිය ගංවතුර",
+          "බත්තරමුල්ල පාර්ලිමේන්තු පාර ළඟ ගංවතුර",
           "අපේ ගෙදර පහ දෙනෙක් ඉන්නවා",
           "ගේට වතුර ආවා"
         ],
@@ -8510,7 +8511,7 @@
         "receive_time": "2026-05-08T08:18:01.000000+00:00",
         "_ground_truth": {
           "incident_id": "DEMO_FLOOD_002",
-          "actual_location": "Kotte",
+          "actual_location": "Battaramulla",
           "actual_urgency": "CRITICAL",
           "actual_people": 18,
           "incident_type": "flood",
@@ -8518,14 +8519,14 @@
           "scenario_type": "conflicting_counts",
           "district": "Colombo",
           "province": "Western",
-          "lat": 6.89420,
-          "lng": 79.91920
+          "lat": 6.89920,
+          "lng": 79.91870
         }
       },
       {
         "incident_type": "fire",
         "location_raw": "88 Lake Drive, Dehiwala",
-        "urgency": "HIGH",
+        "urgency": "CRITICAL",
         "people_involved": null,
         "confidence": 0.71,
         "key_phrases": [
@@ -8541,7 +8542,7 @@
         "_ground_truth": {
           "incident_id": "DEMO_FIRE_003",
           "actual_location": "Dehiwala - 88 Lake Drive",
-          "actual_urgency": "HIGH",
+          "actual_urgency": "CRITICAL",
           "actual_people": 4,
           "incident_type": "fire",
           "language": "romanized_sinhala",
@@ -8613,32 +8614,32 @@
       },
       {
         "incident_type": "fire",
-        "location_raw": "12 Tunnel Road, Pannipitiya",
+        "location_raw": "අංක 18, නාවල පාර, නුගේගොඩ",
         "urgency": "HIGH",
         "people_involved": 3,
         "confidence": 0.77,
         "key_phrases": [
-          "12 Tunnel Road Pannipitiya",
-          "ape pawule ge ginigena",
-          "thun dena gedara atule"
+          "අංක 18 නාවල පාර නුගේගොඩ",
+          "අපේ ගෙදර ගිනිගෙන",
+          "තුන් දෙනෙක් ගෙදර ඇතුලේ"
         ],
-        "timestamp": "2026-05-08T09:03:00+00:00",
+        "timestamp": "2026-05-08T09:25:00+00:00",
         "source_id": "demo_call_009",
         "channel": "voice",
-        "receive_time": "2026-05-08T09:03:01.000000+00:00",
-        "transcript": "Sir Pannipitiya 12 Tunnel Road eke ape pawule ge ekak ginigena. Thun dena gedara atule innawa. Wiruddwa weasenkar yannada bari. Fire brigade ikmanata ewanna karunakara.",
+        "receive_time": "2026-05-08T09:25:01.000000+00:00",
+        "transcript": "සර් නුගේගොඩ නාවල පාරේ අංක 18 අපේ ගෙදර ගිනිගෙන. තුන් දෙනෙක් ගෙදර ඇතුලේ ඉන්නවා. පිට වෙන්න බැරි. ගිනි නිවන රථයක් ඉක්මනින් එවන්න.",
         "_ground_truth": {
           "incident_id": "DEMO_FIRE_005",
-          "actual_location": "Pannipitiya - 12 Tunnel Rd",
+          "actual_location": "Nugegoda - 18 Nawala Road",
           "actual_urgency": "HIGH",
           "actual_people": 3,
           "incident_type": "fire",
-          "language": "romanized_sinhala",
+          "language": "sinhala",
           "scenario_type": "geographically_near",
           "district": "Colombo",
           "province": "Western",
-          "lat": 6.84510,
-          "lng": 79.94470
+          "lat": 6.87700,
+          "lng": 79.89200
         }
       },
       {
