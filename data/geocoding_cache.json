@@ -1091,5 +1091,20 @@
   "formatted_address": "Negombo, Gampaha, Sri Lanka",
   "locality": "",
   "relevance": 0.560847
+ },
+ "nom:180, මීගමුව පාර": null,
+ "nom:69, මීගමුව වීදිය": null,
+ "mapbox:no. 142, athurugiriya road, kaduwela": {
+  "canonical_name": "Haduwela, Matale, Sri Lanka",
+  "lat": 7.71585,
+  "lng": 80.68456,
+  "district": "",
+  "province": "Matale",
+  "method": "mapbox",
+  "score": 79.1,
+  "flag": "mapbox_location",
+  "formatted_address": "Haduwela, Matale, Sri Lanka",
+  "locality": "",
+  "relevance": 0.545304
  }
 }

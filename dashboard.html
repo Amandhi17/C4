@@ -994,7 +994,11 @@ function IncidentList({ uirs, selectedId, onSelect }) {
       const q = search.toLowerCase();
       return u.location?.display_name?.toLowerCase().includes(q)
           || u.incident_type?.toLowerCase().includes(q)
-          || u.uir_id?.toLowerCase().includes(q);
+          || u.uir_id?.toLowerCase().includes(q)
+          || (u.ground_truth_incidents || []).some(id => String(id).toLowerCase().includes(q))
+          || (u.sources || []).some(s =>
+               String(s.id || '').toLowerCase().includes(q)
+            || String(s.incident_id || '').toLowerCase().includes(q));
     }
     return true;
   });
@@ -1012,7 +1016,7 @@ function IncidentList({ uirs, selectedId, onSelect }) {
       <div className="list-search">
         <input
           className="search-input"
-          placeholder="Search location, type, ID…"
+          placeholder="Search location, type, UIR / incident / source ID…"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
