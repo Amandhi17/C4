@@ -7870,12 +7870,12 @@
       },
       {
         "incident_type": "flood",
-        "location_raw": "වක්වැල්ල පාර, ගාල්ල",
+        "location_raw": "මාස්කෙළිය පාර, හැටන්",
         "urgency": "CRITICAL",
         "people_involved": 3,
         "confidence": 0.78,
         "key_phrases": [
-          "ගාල්ල වක්වැල්ල පාර වළ කන්දක්",
+          "හැටන් මාස්කෙළිය පාර වළ කන්දක්",
           "තුන් දෙනෙක් කටු යට හිර වෙලා",
           "හදිසි උදව් අවශ්‍යයි"
         ],
@@ -7885,26 +7885,26 @@
         "receive_time": "2026-05-08T09:00:01.000000+00:00",
         "_ground_truth": {
           "incident_id": "DEMO_LANDSLIDE_001",
-          "actual_location": "Galle - Wakwella Road",
+          "actual_location": "Hatton - Maskeliya Road",
           "actual_urgency": "CRITICAL",
           "actual_people": 3,
           "incident_type": "flood",
           "language": "sinhala",
           "scenario_type": "long_gap",
-          "district": "Galle",
-          "province": "Southern",
-          "lat": 6.07560,
-          "lng": 80.21750
+          "district": "Nuwara Eliya",
+          "province": "Central",
+          "lat": 6.89170,
+          "lng": 80.59560
         }
       },
       {
         "incident_type": "flood",
-        "location_raw": "Wakwella Road, Galle",
+        "location_raw": "Maskeliya Road, Hatton",
         "urgency": "CRITICAL",
         "people_involved": 3,
         "confidence": 0.82,
         "key_phrases": [
-          "Wakwella road eke wala kandak watile",
+          "Hatton Maskeliya road eke wala kandak watile",
           "thawamath thun dena katu yata",
           "ikmanata adhar ewanna"
         ],
@@ -7912,19 +7912,19 @@
         "source_id": "demo_call_005",
         "channel": "voice",
         "receive_time": "2026-05-08T12:15:01.000000+00:00",
-        "transcript": "Sir Galle Wakwella road eke ude wage wala kandak watunu eka thama hari karala ne. Mage nangiye family thama katu yata innawa, thun dena. Karunakara ikmanata aadhar ewanna.",
+        "transcript": "Sir Hatton Maskeliya road eke ude wage wala kandak watunu eka thama hari karala ne. Mage nangiye family thama katu yata innawa, thun dena. Karunakara ikmanata aadhar ewanna.",
         "_ground_truth": {
           "incident_id": "DEMO_LANDSLIDE_001",
-          "actual_location": "Galle - Wakwella Road",
+          "actual_location": "Hatton - Maskeliya Road",
           "actual_urgency": "CRITICAL",
           "actual_people": 3,
           "incident_type": "flood",
           "language": "romanized_sinhala",
           "scenario_type": "long_gap",
-          "district": "Galle",
-          "province": "Southern",
-          "lat": 6.07640,
-          "lng": 80.21830
+          "district": "Nuwara Eliya",
+          "province": "Central",
+          "lat": 6.89250,
+          "lng": 80.59640
         }
       },
       {
@@ -8190,9 +8190,9 @@
         "note": "Distinct incident — Silva Stores at Wewala Junction, Negombo (a shop fire, not a house). Different city, different landmark, different building type. Must NOT merge with Maharagama fire."
       },
       {
-        "cluster": "Galle landslide — long_gap (~09:00 then 12:15, 8 May 2026)",
+        "cluster": "Hatton landslide — long_gap (~09:00 then 12:15, 8 May 2026)",
         "report_ids": ["demo_sms_003", "demo_call_005"],
-        "note": "Same landslide reported 3 hours apart. demo_sms_003 (SMS, Sinhala) at 09:00 raises alarm at Wakwella Road. demo_call_005 (voice, Romanized Sinhala) at 12:15 is a follow-up update — same address, same incident. Should merge despite long temporal gap (tests time-tolerant dedup)."
+        "note": "Same landslide reported 3 hours apart on Maskeliya Road, Hatton (Central Province, Nuwara Eliya district — landslide-prone hill country). demo_sms_003 (SMS, Sinhala) at 09:00 raises alarm. demo_call_005 (voice, Romanized Sinhala) at 12:15 is a follow-up update — same address, same incident. Should merge despite long temporal gap (tests time-tolerant dedup)."
       },
       {
         "cluster": "Kotte flood — conflicting_counts (~08:15, 8 May 2026)",
@@ -8406,12 +8406,12 @@
       },
       {
         "incident_type": "flood",
-        "location_raw": "වක්වැල්ල පාර, ගාල්ල",
+        "location_raw": "මාස්කෙළිය පාර, හැටන්",
         "urgency": "CRITICAL",
         "people_involved": 3,
         "confidence": 0.78,
         "key_phrases": [
-          "ගාල්ල වක්වැල්ල පාර වළ කන්දක්",
+          "හැටන් මාස්කෙළිය පාර වළ කන්දක්",
           "තුන් දෙනෙක් කටු යට හිර වෙලා",
           "හදිසි උදව් අවශ්‍යයි"
         ],
@@ -8421,26 +8421,26 @@
         "receive_time": "2026-05-08T09:00:01.000000+00:00",
         "_ground_truth": {
           "incident_id": "DEMO_LANDSLIDE_001",
-          "actual_location": "Galle - Wakwella Road",
+          "actual_location": "Hatton - Maskeliya Road",
           "actual_urgency": "CRITICAL",
           "actual_people": 3,
           "incident_type": "flood",
           "language": "sinhala",
           "scenario_type": "long_gap",
-          "district": "Galle",
-          "province": "Southern",
-          "lat": 6.07560,
-          "lng": 80.21750
+          "district": "Nuwara Eliya",
+          "province": "Central",
+          "lat": 6.89170,
+          "lng": 80.59560
         }
       },
       {
         "incident_type": "flood",
-        "location_raw": "Wakwella Road, Galle",
+        "location_raw": "Maskeliya Road, Hatton",
         "urgency": "CRITICAL",
         "people_involved": 3,
         "confidence": 0.82,
         "key_phrases": [
-          "Wakwella road eke wala kandak watile",
+          "Hatton Maskeliya road eke wala kandak watile",
           "thawamath thun dena katu yata",
           "ikmanata adhar ewanna"
         ],
@@ -8448,19 +8448,19 @@
         "source_id": "demo_call_005",
         "channel": "voice",
         "receive_time": "2026-05-08T12:15:01.000000+00:00",
-        "transcript": "Sir Galle Wakwella road eke ude wage wala kandak watunu eka thama hari karala ne. Mage nangiye family thama katu yata innawa, thun dena. Karunakara ikmanata aadhar ewanna.",
+        "transcript": "Sir Hatton Maskeliya road eke ude wage wala kandak watunu eka thama hari karala ne. Mage nangiye family thama katu yata innawa, thun dena. Karunakara ikmanata aadhar ewanna.",
         "_ground_truth": {
           "incident_id": "DEMO_LANDSLIDE_001",
-          "actual_location": "Galle - Wakwella Road",
+          "actual_location": "Hatton - Maskeliya Road",
           "actual_urgency": "CRITICAL",
           "actual_people": 3,
           "incident_type": "flood",
           "language": "romanized_sinhala",
           "scenario_type": "long_gap",
-          "district": "Galle",
-          "province": "Southern",
-          "lat": 6.07640,
-          "lng": 80.21830
+          "district": "Nuwara Eliya",
+          "province": "Central",
+          "lat": 6.89250,
+          "lng": 80.59640
         }
       },
       {
