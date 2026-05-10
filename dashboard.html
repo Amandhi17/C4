@@ -1200,7 +1200,7 @@ function DetailPanel({ uir, onAction, onSelectUir }) {
               return (
                 <span key={i} className={`flag-tag ${flag.includes('operator') || isAutoMerged ? 'critical-flag' : ''}`}
                   style={isAutoMerged ? {background:'rgba(59,130,246,0.12)', color:'var(--accent)', borderColor:'rgba(59,130,246,0.3)'} : {}}>
-                  {isAutoMerged ? '⚡ AUTO-MERGED (score ≥ 82%)' : flag.replace(/_/g,' ')}
+                  {isAutoMerged ? '⚡ AUTO-MERGED (above urgency-aware bypass bar)' : flag.replace(/_/g,' ')}
                 </span>
               );
             })}
@@ -1309,7 +1309,7 @@ function DetailPanel({ uir, onAction, onSelectUir }) {
         <div className="detail-section">
           <div className="section-title">🔗 Possible Duplicates
             <span style={{color:'var(--text-muted)', fontWeight:400, marginLeft:'6px', fontSize:'9px'}}>
-              score &lt; 0.82 — not auto-merged
+              below urgency-aware auto-merge bar — kept separate for operator review
             </span>
           </div>
           {uir.linked_uirs.map((id, i) => {

@@ -7659,7 +7659,570 @@
         "lat": 6.94197443,
         "lng": 79.86671288
       }
-    }
+    },{
+        "incident_type": "flood",
+        "location_raw": "142 Athurugiriya Road, Kaduwela",
+        "urgency": "CRITICAL",
+        "people_involved": 4,
+        "confidence": 0.86,
+        "key_phrases": [
+          "142 Athurugiriya Road Kaduwela",
+          "Perera mahattayage gedara",
+          "ape gederata watura aawa"
+        ],
+        "timestamp": "2026-05-08T06:30:00+00:00",
+        "source_id": "demo_call_001",
+        "channel": "voice",
+        "receive_time": "2026-05-08T06:30:01.000000+00:00",
+        "transcript": "Sir mata Perera kiyala kiyanne. Ape gedara 142 Athurugiriya paara, Kaduwela. Ape gederata watura ena. Hathara dena innawa, lamayi dennek innawa. Boat ekak ikmanata ewanna karunakara.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_001",
+          "actual_location": "Kaduwela",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 6,
+          "incident_type": "flood",
+          "language": "romanized_sinhala",
+          "scenario_type": "mass_report",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.93333,
+          "lng": 79.98333
+        }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "අංක 142, අතුරුගිරිය පාර, කඩුවෙල",
+        "urgency": "CRITICAL",
+        "people_involved": 4,
+        "confidence": 0.81,
+        "key_phrases": [
+          "අංක 142 අතුරුගිරිය පාර කඩුවෙල",
+          "පෙරේරා මහත්තයාගේ ගෙදර",
+          "හතර දෙනෙක් ගෙදර අතුලේ ඉන්නවා"
+        ],
+        "timestamp": "2026-05-08T06:32:00+00:00",
+        "source_id": "demo_sms_001",
+        "channel": "sms",
+        "receive_time": "2026-05-08T06:32:01.000000+00:00",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_001",
+          "actual_location": "Kaduwela",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 6,
+          "incident_type": "flood",
+          "language": "sinhala",
+          "scenario_type": "mass_report",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.9342,
+          "lng": 79.9841
+        }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "எண் 145, அதுருகிரிய வீதி, களுவெல",
+        "urgency": "CRITICAL",
+        "people_involved": 6,
+        "confidence": 0.79,
+        "key_phrases": [
+          "எண் 145 அதுருகிரிய வீதி களுவெல",
+          "ராமன் குடும்பம் வீடு",
+          "வீட்டுக்குள் தண்ணீர் வந்தது"
+        ],
+        "timestamp": "2026-05-08T06:34:00+00:00",
+        "source_id": "demo_call_002",
+        "channel": "voice",
+        "receive_time": "2026-05-08T06:34:01.000000+00:00",
+        "transcript": "சார் நாங்கள் ராமன் குடும்பம், எண் 145 அதுருகிரிய வீதி களுவெலயில் இருக்கிறோம். எங்கள் பக்கத்து வீடான பெரேராவின் வீட்டுக்கும் தண்ணீர் வந்துவிட்டது. எங்கள் வீட்டுக்குள்ளும் தண்ணீர் வந்தது. ஆறு பேர் இருக்கிறோம். தயவுசெய்து படகு அனுப்புங்கள்.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_001",
+          "actual_location": "Kaduwela",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 6,
+          "incident_type": "flood",
+          "language": "tamil",
+          "scenario_type": "cross_lingual_duplicate",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.9328,
+          "lng": 79.98275
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "අංක 27, ගල්වල පාර, මහරගම",
+        "urgency": "HIGH",
+        "people_involved": 3,
+        "confidence": 0.83,
+        "key_phrases": [
+          "අංක 27 ගල්වල පාර මහරගම",
+          "ෆර්නැන්දු මහත්තයාගේ ගෙදර ගින්න",
+          "ගෑස් සිලින්ඩරයක් පුපුරලා"
+        ],
+        "timestamp": "2026-05-08T07:10:00+00:00",
+        "source_id": "demo_call_003",
+        "channel": "voice",
+        "receive_time": "2026-05-08T07:10:01.000000+00:00",
+        "transcript": "අංක 27, ගල්වල පාර, මහරගමේ ෆර්නැන්දු මහත්තයාගේ ගෙදර ගින්නක්. ගෑස් සිලින්ඩරයක් පුපුරලා. තුන් දෙනෙක් ගෙදර ඇතුලේ ඉන්නවා. ගිනි නිවන රථයක් ඉක්මනින් එවන්න.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_001",
+          "actual_location": "Maharagama",
+          "actual_urgency": "HIGH",
+          "actual_people": 3,
+          "incident_type": "fire",
+          "language": "sinhala",
+          "scenario_type": "mass_report",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.846,
+          "lng": 79.9275
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "27 Galwala Road, Maharagama",
+        "urgency": "HIGH",
+        "people_involved": 3,
+        "confidence": 0.74,
+        "key_phrases": [
+          "27 Galwala Road Maharagama gini",
+          "Fernando mahattayage gedara",
+          "gas cylinder pupura"
+        ],
+        "timestamp": "2026-05-08T07:12:00+00:00",
+        "source_id": "demo_sms_002",
+        "channel": "sms",
+        "receive_time": "2026-05-08T07:12:01.000000+00:00",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_001",
+          "actual_location": "Maharagama",
+          "actual_urgency": "HIGH",
+          "actual_people": 3,
+          "incident_type": "fire",
+          "language": "romanized_sinhala",
+          "scenario_type": "cross_lingual_duplicate",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.8468,
+          "lng": 79.9281
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "Silva Stores, Wewala Junction, Negombo",
+        "urgency": "MEDIUM",
+        "people_involved": 2,
+        "confidence": 0.72,
+        "key_phrases": [
+          "Silva Stores Wewala Junction Negombo",
+          "kade ekak ginigena",
+          "fire brigade kalin enna"
+        ],
+        "timestamp": "2026-05-08T07:45:00+00:00",
+        "source_id": "demo_call_004",
+        "channel": "voice",
+        "receive_time": "2026-05-08T07:45:01.000000+00:00",
+        "transcript": "Negombo Wewala Junction langa thiyena Silva Stores kiyana kade ekak ginigena. Kade ayithikaru saha sahayaka kenek innawa, kawuruwath ahuwela na. Fire brigade ekak ikmanata ewanna karunakara.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_002",
+          "actual_location": "Negombo",
+          "actual_urgency": "MEDIUM",
+          "actual_people": 2,
+          "incident_type": "fire",
+          "language": "romanized_sinhala",
+          "scenario_type": "standard",
+          "district": "Gampaha",
+          "province": "Western",
+          "lat": 7.2085,
+          "lng": 79.8389
+        }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "ගල්හා පාර, පේරාදෙණිය",
+        "urgency": "CRITICAL",
+        "people_involved": 5,
+        "confidence": 0.78,
+        "key_phrases": [
+          "පේරාදෙණිය ගල්හා පාර ගංවතුර",
+          "පහ දෙනෙක් ගේ ඇතුලේ හිර වෙලා",
+          "හදිසි උදව් අවශ්‍යයි"
+        ],
+        "timestamp": "2026-05-08T09:00:00+00:00",
+        "source_id": "demo_sms_003",
+        "channel": "sms",
+        "receive_time": "2026-05-08T09:00:01.000000+00:00",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_004",
+          "actual_location": "Peradeniya - Galaha Road",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 5,
+          "incident_type": "flood",
+          "language": "sinhala",
+          "scenario_type": "long_gap",
+          "district": "Kandy",
+          "province": "Central",
+          "lat": 7.27,
+          "lng": 80.6
+        }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "Galaha Road, Peradeniya",
+        "urgency": "CRITICAL",
+        "people_involved": 5,
+        "confidence": 0.82,
+        "key_phrases": [
+          "Peradeniya Galaha road watura wedila",
+          "thawamath pas dena gedara hira",
+          "ikmanata adhar ewanna"
+        ],
+        "timestamp": "2026-05-08T12:15:00+00:00",
+        "source_id": "demo_call_005",
+        "channel": "voice",
+        "receive_time": "2026-05-08T12:15:01.000000+00:00",
+        "transcript": "Sir Peradeniya Galaha road eke ude wage flood eka thama hari karala ne. Mage nangiye family thama gedara hira welawenna innawa, pas dena. Watura ihalata ena. Karunakara ikmanata aadhar ewanna.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_004",
+          "actual_location": "Peradeniya - Galaha Road",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 5,
+          "incident_type": "flood",
+          "language": "romanized_sinhala",
+          "scenario_type": "long_gap",
+          "district": "Kandy",
+          "province": "Central",
+          "lat": 7.2708,
+          "lng": 80.6008
+        }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "Battaramulla, near Parliament Road",
+        "urgency": "CRITICAL",
+        "people_involved": 20,
+        "confidence": 0.69,
+        "key_phrases": [
+          "Battaramulla Parliament paara langa flood",
+          "20 ka pamana minissu hira",
+          "mulu paaramath watura"
+        ],
+        "timestamp": "2026-05-08T08:15:00+00:00",
+        "source_id": "demo_call_006",
+        "channel": "voice",
+        "receive_time": "2026-05-08T08:15:01.000000+00:00",
+        "transcript": "Sir mama Battaramulla Parliament paara langa innne. Mulu paaramath watura. Pahala wala innne 20 ka pamana minissu hira welawelaa innawa. Karunakara ikmanata aadhar ewanna.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_002",
+          "actual_location": "Battaramulla",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 18,
+          "incident_type": "flood",
+          "language": "romanized_sinhala",
+          "scenario_type": "conflicting_counts",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.899,
+          "lng": 79.9183
+        }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "බත්තරමුල්ල, පාර්ලිමේන්තු පාර ළඟ",
+        "urgency": "CRITICAL",
+        "people_involved": 5,
+        "confidence": 0.83,
+        "key_phrases": [
+          "බත්තරමුල්ල පාර්ලිමේන්තු පාර ළඟ ගංවතුර",
+          "අපේ ගෙදර පහ දෙනෙක් ඉන්නවා",
+          "ගේට වතුර ආවා"
+        ],
+        "timestamp": "2026-05-08T08:18:00+00:00",
+        "source_id": "demo_sms_004",
+        "channel": "sms",
+        "receive_time": "2026-05-08T08:18:01.000000+00:00",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_002",
+          "actual_location": "Battaramulla",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 18,
+          "incident_type": "flood",
+          "language": "sinhala",
+          "scenario_type": "conflicting_counts",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.8992,
+          "lng": 79.9187
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "88 Lake Drive, Dehiwala",
+        "urgency": "CRITICAL",
+        "people_involved": null,
+        "confidence": 0.71,
+        "key_phrases": [
+          "88 Lake Drive Dehiwala",
+          "ge ekak ginigena",
+          "passer-by report"
+        ],
+        "timestamp": "2026-05-08T08:30:00+00:00",
+        "source_id": "demo_call_007",
+        "channel": "voice",
+        "receive_time": "2026-05-08T08:30:01.000000+00:00",
+        "transcript": "Sir mama Dehiwala paaren yana keneki. 88 Lake Drive eke ge ekak hari ginigena. Mama gedara kaurudo daanne ne, but kade welavak yawanna. Doomgena yana ekak peneawa.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_003",
+          "actual_location": "Dehiwala - 88 Lake Drive",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 4,
+          "incident_type": "fire",
+          "language": "romanized_sinhala",
+          "scenario_type": "third_party",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.851,
+          "lng": 79.865
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "අංක 88, ලේක් ඩ්‍රයිව්, දෙහිවල",
+        "urgency": "CRITICAL",
+        "people_involved": 4,
+        "confidence": 0.86,
+        "key_phrases": [
+          "අංක 88 ලේක් ඩ්‍රයිව් දෙහිවල",
+          "අපේ ගෙදර ගිනිගෙන",
+          "හතර දෙනෙක් ඇතුලේ"
+        ],
+        "timestamp": "2026-05-08T08:31:00+00:00",
+        "source_id": "demo_sms_005",
+        "channel": "sms",
+        "receive_time": "2026-05-08T08:31:01.000000+00:00",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_003",
+          "actual_location": "Dehiwala - 88 Lake Drive",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 4,
+          "incident_type": "fire",
+          "language": "sinhala",
+          "scenario_type": "third_party",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.8512,
+          "lng": 79.8651
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "45 High Level Road, Nugegoda",
+        "urgency": "HIGH",
+        "people_involved": 2,
+        "confidence": 0.8,
+        "key_phrases": [
+          "45 High Level Road Nugegoda",
+          "Maliban store kade ginigena",
+          "kade ayithikaru saha sahayaka"
+        ],
+        "timestamp": "2026-05-08T09:00:00+00:00",
+        "source_id": "demo_call_008",
+        "channel": "voice",
+        "receive_time": "2026-05-08T09:00:01.000000+00:00",
+        "transcript": "Sir Nugegoda 45 High Level Road eke kade ekak ginigena. Maliban store kiyala thiyenne ekata. Lokku gini malayak wage. Kade ayithikaru saha sahayakaya pamani innne, dennama ahu welawenni.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_004",
+          "actual_location": "Nugegoda - 45 High Level Rd",
+          "actual_urgency": "HIGH",
+          "actual_people": 2,
+          "incident_type": "fire",
+          "language": "romanized_sinhala",
+          "scenario_type": "geographically_near",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.8728,
+          "lng": 79.8882
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "අංක 18, නාවල පාර, නුගේගොඩ",
+        "urgency": "HIGH",
+        "people_involved": 3,
+        "confidence": 0.77,
+        "key_phrases": [
+          "අංක 18 නාවල පාර නුගේගොඩ",
+          "අපේ ගෙදර ගිනිගෙන",
+          "තුන් දෙනෙක් ගෙදර ඇතුලේ"
+        ],
+        "timestamp": "2026-05-08T09:25:00+00:00",
+        "source_id": "demo_call_009",
+        "channel": "voice",
+        "receive_time": "2026-05-08T09:25:01.000000+00:00",
+        "transcript": "සර් නුගේගොඩ නාවල පාරේ අංක 18 අපේ ගෙදර ගිනිගෙන. තුන් දෙනෙක් ගෙදර ඇතුලේ ඉන්නවා. පිට වෙන්න බැරි. ගිනි නිවන රථයක් ඉක්මනින් එවන්න.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_005",
+          "actual_location": "Nugegoda - 18 Nawala Road",
+          "actual_urgency": "HIGH",
+          "actual_people": 3,
+          "incident_type": "fire",
+          "language": "sinhala",
+          "scenario_type": "geographically_near",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.877,
+          "lng": 79.892
+        }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "",
+        "urgency": "HIGH",
+        "people_involved": null,
+        "confidence": 0.42,
+        "key_phrases": [
+          "wathura aawa hadisi",
+          "kohe da kiyala danne ne",
+          "gam paara langa wage"
+        ],
+        "timestamp": "2026-05-08T09:30:00+00:00",
+        "source_id": "demo_call_010",
+        "channel": "voice",
+        "receive_time": "2026-05-08T09:30:01.000000+00:00",
+        "transcript": "ai... ai... mata kalala ne... wathura aawa hadisi widiyata... mama danne ne kohe da kiyala... gam paara langa wage thiyenne... helpa karanna... hadisi... gedara watura wadi karanawa.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_003",
+          "actual_location": "Unknown",
+          "actual_urgency": "HIGH",
+          "actual_people": null,
+          "incident_type": "flood",
+          "language": "romanized_sinhala",
+          "scenario_type": "location_unknown",
+          "district": "Unknown",
+          "province": "Unknown",
+          "lat": null,
+          "lng": null
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "kelaniya",
+        "urgency": "MEDIUM",
+        "people_involved": null,
+        "confidence": 0.38,
+        "key_phrases": [
+          "fire help kelaniya"
+        ],
+        "timestamp": "2026-05-08T09:40:00+00:00",
+        "source_id": "demo_sms_006",
+        "channel": "sms",
+        "receive_time": "2026-05-08T09:40:01.000000+00:00",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_006",
+          "actual_location": "Kelaniya",
+          "actual_urgency": "MEDIUM",
+          "actual_people": null,
+          "incident_type": "fire",
+          "language": "romanized_sinhala",
+          "scenario_type": "minimal_message",
+          "district": "Gampaha",
+          "province": "Western",
+          "lat": 6.955,
+          "lng": 79.922
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "",
+        "urgency": "LOW",
+        "people_involved": null,
+        "confidence": 0.15,
+        "key_phrases": [
+          "test test mic check",
+          "hello hello",
+          "123 testing"
+        ],
+        "timestamp": "2026-05-08T09:50:00+00:00",
+        "source_id": "demo_call_011",
+        "channel": "voice",
+        "receive_time": "2026-05-08T09:50:01.000000+00:00",
+        "transcript": "test test mic check 123. hello hello can you hear me. testing testing one two three. mama press kara accident eka. ok ok bye.",
+        "_ground_truth": {
+          "incident_id": "DEMO_NOISE_001",
+          "actual_location": "Unknown",
+          "actual_urgency": "LOW",
+          "actual_people": null,
+          "incident_type": "noise",
+          "language": "romanized_sinhala",
+          "scenario_type": "noise",
+          "district": "Unknown",
+          "province": "Unknown",
+          "lat": null,
+          "lng": null
+        }
+      },{
+        "incident_type": "fire",
+        "location_raw": "12 Temple Road, Battaramulla",
+        "urgency": "CRITICAL",
+        "people_involved": 4,
+        "confidence": 0.88,
+        "key_phrases": [
+          "12 Temple Road Battaramulla",
+          "dawana mahala electric wire short circuit",
+          "lamayi dennek dawana mahale ulu wahalata yatama hirawela"
+        ],
+        "timestamp": "2026-05-08T10:00:00+00:00",
+        "source_id": "demo_call_012",
+        "channel": "voice",
+        "receive_time": "2026-05-08T10:00:01.000000+00:00",
+        "transcript": "Hello sir, helpa karanna ikmanata. Mage namai Jayasuriya. Ape gedara 12 Temple Road, Battaramulla. Dawana mahala kamaraye electric wire ekak short circuit wela ginigaththa. Lamayi dennek dawana mahale kamare ulu wahalata yatama hirawela innawa, padhe peniyana duma godak nisa basinna baha. Mama saha bariya patalayama beruna, lamayi tama uda. Eth lamayi udin gannath ona karunakara, ladder ekak ekka enna!",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_007_NOVELTY_A",
+          "actual_location": "Battaramulla — 12 Temple Road (Jayasuriya residence, electrical fire upstairs)",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 4,
+          "incident_type": "fire",
+          "language": "romanized_sinhala",
+          "scenario_type": "adjacent_critical",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.8959,
+          "lng": 79.9189,
+          "_demo_role": "novelty_pair_A — electrical fire on upper floor, two children trapped in upstairs bedroom; would falsely merge with demo_call_013 under any fixed-threshold dedup despite being a fundamentally different physical incident at a different address"
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "27 Temple Road, Battaramulla",
+        "urgency": "CRITICAL",
+        "people_involved": 2,
+        "confidence": 0.86,
+        "key_phrases": [
+          "අංක 27 ටෙම්පල් පාර බත්තරමුල්ල",
+          "කුස්සියේ ගෑස් සිලින්ඩරයෙන් ලීක් වෙලා පුපුරා ගිහින්",
+          "ආච්චි අම්මායි බාප්පායි කුස්සියේ මාට්ටු"
+        ],
+        "timestamp": "2026-05-08T10:03:00+00:00",
+        "source_id": "demo_call_013",
+        "channel": "voice",
+        "receive_time": "2026-05-08T10:03:01.000000+00:00",
+        "transcript": "හලෝ ඉක්මනට එන්න! අංක 27 ටෙම්පල් පාර, බත්තරමුල්ල. ද සිල්වා පවුල. අපේ කුස්සියේ තිබුණු ගෑස් සිලින්ඩරයෙන් ලීක් වෙලා පුපුරා ගිහින් පහත මහල පුරාවටම ගෑස් වැටිලා. ආච්චි අම්මායි බාප්පා කෙනෙකුයි කුස්සියේ පැත්තේ ඉඳලා මාට්ටු වෙලා - ආච්චිට ඇවිදින්න බැහැ. අනිත් ගෑස් සිලින්ඩර් දෙකකුත් කුස්සියේ තියෙනවා - ඒවාත් පුපුරයි. ඉක්මනට ගෑස් කට් කරන්න පුළුවන් කෙනෙක් එක්ක එන්න, සාමාන්‍ය ගිනි නිවන කට්ටිය විතරක් මදි!",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_007_NOVELTY_B",
+          "actual_location": "Battaramulla — 27 Temple Road (de Silva residence, kitchen gas-cylinder leak/explosion, ground floor)",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 2,
+          "incident_type": "fire",
+          "language": "sinhala",
+          "scenario_type": "adjacent_critical",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.8959,
+          "lng": 79.9189,
+          "_demo_role": "novelty_pair_B — kitchen gas-cylinder leak on ground floor, elderly grandmother + uncle trapped, two more cylinders waiting to explode (needs gas-shutoff specialist); different house on the same street as demo_call_012 — gazetteer returns identical Battaramulla centroid so geo_sim≈1.0 and time_sim≈0.86, but lexical content (gas/kitchen/elderly/cylinder) is deliberately distinct from demo_call_012's content (electrical/upstairs/children/wiring) so semantic similarity stays in [0.55, 0.78] and combined score lands in the gray zone [0.72, 0.86] — BELOW AUTO_MERGE_THRESHOLD=0.88 (no bypass) AND distance > eps[CRITICAL]=0.15 (no normal merge), producing two UIRs cross-linked as possible_duplicate_nearby"
+        }
+      }
+      
   ],
   "_demo_reports_for_dedup": {
     "_comment": "Demo reports for mid-evaluation dedup demo. NOT loaded by server.py (which only reads top-level `reports`). To run the demo: copy any subset of these into the `reports` array above, then restart the server. Each report carries a specific street address + family/landmark to make the dedup decision unambiguous. NOTE ON TIME: all `timestamp` and `receive_time` fields in the report objects are in UTC (suffix +00:00). The expected_clusters notes below quote times in SLST (Sri Lanka Standard Time = UTC+5:30) so they match what the dashboard shows the operator. Conversion: SLST = UTC + 5h30m. Expected behaviour is described in `expected_clusters`.",
@@ -8263,17 +8826,17 @@
         "confidence": 0.88,
         "key_phrases": [
           "12 Temple Road Battaramulla",
-          "Jayasuriya mahattayage gedara ginigaththa",
-          "lamayi dennek aethule huranawa"
+          "dawana mahala electric wire short circuit",
+          "lamayi dennek dawana mahale ulu wahalata yatama hirawela"
         ],
         "timestamp": "2026-05-08T10:00:00+00:00",
         "source_id": "demo_call_012",
         "channel": "voice",
         "receive_time": "2026-05-08T10:00:01.000000+00:00",
-        "transcript": "Sir ikmanata enna! 12 Temple Road, Battaramulla. Jayasuriya mahattayage gedara ginigaththa. Hathara dena aethule innawa, lamayi dennek innawa. Vahale gini palaweemata patan gaththa. Gini niveem ratha ikmanata ewanna karunakara!",
+        "transcript": "Hello sir, helpa karanna ikmanata. Mage namai Jayasuriya. Ape gedara 12 Temple Road, Battaramulla. Dawana mahala kamaraye electric wire ekak short circuit wela ginigaththa. Lamayi dennek dawana mahale kamare ulu wahalata yatama hirawela innawa, padhe peniyana duma godak nisa basinna baha. Mama saha bariya patalayama beruna, lamayi tama uda. Eth lamayi udin gannath ona karunakara, ladder ekak ekka enna!",
         "_ground_truth": {
           "incident_id": "DEMO_FIRE_007_NOVELTY_A",
-          "actual_location": "Battaramulla — 12 Temple Road",
+          "actual_location": "Battaramulla — 12 Temple Road (Jayasuriya residence, electrical fire upstairs)",
           "actual_urgency": "CRITICAL",
           "actual_people": 4,
           "incident_type": "fire",
@@ -8283,30 +8846,30 @@
           "province": "Western",
           "lat": 6.8959,
           "lng": 79.9189,
-          "_demo_role": "novelty_pair_A — would falsely merge with demo_call_013 under any fixed-threshold dedup; severity-aware eps[CRITICAL]=0.15 + 5-condition gate keep them separate"
+          "_demo_role": "novelty_pair_A — electrical fire on upper floor, two children trapped in upstairs bedroom; would falsely merge with demo_call_013 under any fixed-threshold dedup despite being a fundamentally different physical incident at a different address"
         }
       },
       {
         "incident_type": "fire",
         "location_raw": "27 Temple Road, Battaramulla",
         "urgency": "CRITICAL",
-        "people_involved": 3,
+        "people_involved": 2,
         "confidence": 0.86,
         "key_phrases": [
           "අංක 27 ටෙම්පල් පාර බත්තරමුල්ල",
-          "ද සිල්වා පවුලේ ගෙදර ගිනි ගෙන තියෙනවා",
-          "තුන් දෙනෙක් අතුලේ හිරවෙලා"
+          "කුස්සියේ ගෑස් සිලින්ඩරයෙන් ලීක් වෙලා පුපුරා ගිහින්",
+          "ආච්චි අම්මායි බාප්පායි කුස්සියේ මාට්ටු"
         ],
         "timestamp": "2026-05-08T10:03:00+00:00",
         "source_id": "demo_call_013",
         "channel": "voice",
         "receive_time": "2026-05-08T10:03:01.000000+00:00",
-        "transcript": "ගිනිය ගිනිය! අංක 27 ටෙම්පල් පාර, බත්තරමුල්ල. ද සිල්වා පවුලේ ගෙදර ගිනි ගෙන තියෙනවා. තුන් දෙනෙක් අතුලේ ඉන්නවා. ගිනි දැල් කාමරය පුරාවටම පැතිරෙනවා. ඉක්මනට එන්න ගිනි නිවීම් රථය එවන්න!",
+        "transcript": "හලෝ ඉක්මනට එන්න! අංක 27 ටෙම්පල් පාර, බත්තරමුල්ල. ද සිල්වා පවුල. අපේ කුස්සියේ තිබුණු ගෑස් සිලින්ඩරයෙන් ලීක් වෙලා පුපුරා ගිහින් පහත මහල පුරාවටම ගෑස් වැටිලා. ආච්චි අම්මායි බාප්පා කෙනෙකුයි කුස්සියේ පැත්තේ ඉඳලා මාට්ටු වෙලා - ආච්චිට ඇවිදින්න බැහැ. අනිත් ගෑස් සිලින්ඩර් දෙකකුත් කුස්සියේ තියෙනවා - ඒවාත් පුපුරයි. ඉක්මනට ගෑස් කට් කරන්න පුළුවන් කෙනෙක් එක්ක එන්න, සාමාන්‍ය ගිනි නිවන කට්ටිය විතරක් මදි!",
         "_ground_truth": {
           "incident_id": "DEMO_FIRE_007_NOVELTY_B",
-          "actual_location": "Battaramulla — 27 Temple Road",
+          "actual_location": "Battaramulla — 27 Temple Road (de Silva residence, kitchen gas-cylinder leak/explosion, ground floor)",
           "actual_urgency": "CRITICAL",
-          "actual_people": 3,
+          "actual_people": 2,
           "incident_type": "fire",
           "language": "sinhala",
           "scenario_type": "adjacent_critical",
@@ -8314,7 +8877,7 @@
           "province": "Western",
           "lat": 6.8959,
           "lng": 79.9189,
-          "_demo_role": "novelty_pair_B — different house on the same street as demo_call_012; gazetteer returns identical centroid so geo_sim≈1.0; only the 5-condition CRITICAL gate (min_semantic 0.88, distinct address strings) keeps the merge from happening"
+          "_demo_role": "novelty_pair_B — kitchen gas-cylinder leak on ground floor, elderly grandmother + uncle trapped, two more cylinders waiting to explode (needs gas-shutoff specialist); different house on the same street as demo_call_012 — gazetteer returns identical Battaramulla centroid so geo_sim≈1.0 and time_sim≈0.86, but lexical content (gas/kitchen/elderly/cylinder) is deliberately distinct from demo_call_012's content (electrical/upstairs/children/wiring) so semantic similarity stays in [0.55, 0.78] and combined score lands in the gray zone [0.72, 0.86] — BELOW AUTO_MERGE_THRESHOLD=0.88 (no bypass) AND distance > eps[CRITICAL]=0.15 (no normal merge), producing two UIRs cross-linked as possible_duplicate_nearby"
         }
       }
     ]

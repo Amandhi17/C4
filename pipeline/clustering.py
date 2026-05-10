@@ -11,6 +11,7 @@ C4 Pipeline — Stage 5 & 6: Clustering + Conflict Detection + UIR Management
 """
 
 import math
+import re
 import numpy as np
 from datetime import datetime, timezone, timedelta
 from collections import Counter
@@ -86,7 +87,22 @@ NON_CRITICAL_GATE = {
 
 # If similarity score >= this threshold, force-merge even if safety gate blocked,
 # and mark with 'auto_merged' flag. Below this → keep as possible duplicate.
-AUTO_MERGE_THRESHOLD = 0.88
+#
+# URGENCY-AWARE BYPASS: the bypass is indexed by report urgency to mirror the
+# cost-asymmetry already encoded in EPSILON. Without this, a CRITICAL pair
+# that fails the safety gate by a hair on semantic still gets force-merged
+# (because the old single value 0.88 == CRITICAL_GATE.min_semantic, so the
+# bypass overrode the very gate it was meant to defer to). For CRITICAL we
+# require near-identical text (>=0.95) before overriding the gate — this
+# preserves the bypass's legitimate job (same-address cross-channel duplicates
+# where every signal lines up at 0.95+) while blocking the failure mode where
+# two distinct same-town incidents land in [0.88, 0.94] and get fatally merged.
+AUTO_MERGE_THRESHOLD = {
+    'CRITICAL': 0.95,   # bypass requires near-identical text — false-merge is potentially fatal
+    'HIGH':     0.88,
+    'MEDIUM':   0.85,
+    'LOW':      0.82,
+}
 
 
 # ============================================================
@@ -180,6 +196,47 @@ def combined_similarity(report: dict, uir: dict) -> dict:
         'combined': combined,
         'distance': 1.0 - combined,
     }
+
+
+# ============================================================
+# CRITICAL same-street structural guard
+# ============================================================
+
+_STREET_NUM_RE = re.compile(r'\b\d+\b')
+
+
+def critical_address_mismatch(report: dict, uir: dict, sim_scores: dict) -> bool:
+    """Hard-block merges between CRITICAL reports whose location_raw strings
+    reference different street numbers but resolve to the same coordinates.
+
+    Geocoders frequently return town/area centroids for residential
+    addresses, so geo_distance alone cannot tell "12 Temple Rd" from
+    "27 Temple Rd" in the same town. This guard enforces the cost-asymmetry
+    principle structurally — neither safety-gate failures nor high ML
+    probability can override it for CRITICAL pairs. False-merge on CRITICAL
+    is potentially fatal (one fire truck to one address, family at the
+    other house left to die); one extra operator click on a falsely-split
+    duplicate is cheap.
+    """
+    if report.get('urgency') != 'CRITICAL':
+        return False
+    # Only fire when the geo signal says "same place" — far-apart pairs
+    # are already rejected by the safety gate's distance check.
+    if sim_scores.get('geographic', 0.0) < 0.9:
+        return False
+    loc_r = (report.get('location_raw') or '').strip()
+    src_strs = uir.get('location', {}).get('source_strings', []) or []
+    loc_u = ' '.join(src_strs[:3]).strip()
+    if not loc_r or not loc_u:
+        return False
+    nums_r = set(_STREET_NUM_RE.findall(loc_r))
+    nums_u = set(_STREET_NUM_RE.findall(loc_u))
+    if not nums_r or not nums_u:
+        return False
+    # Mismatch only when neither side's number set is a subset of the
+    # other — protects "12 Temple Rd" vs "12 Temple Rd, 10120" (postal
+    # code added) from false-flagging.
+    return not (nums_r <= nums_u or nums_u <= nums_r)
 
 
 # ============================================================
@@ -674,9 +731,20 @@ class IncidentClusterEngine:
                 best_sim = sim
         
         if best_uir is not None:
+            # CRITICAL same-street structural guard: same coords + divergent
+            # street numbers ⇒ refuse merge regardless of ML probability or
+            # safety-gate outcome. Architectural enforcement of the
+            # cost-asymmetry principle (see critical_address_mismatch).
+            addr_mismatch = critical_address_mismatch(report, best_uir, best_sim)
+
             # Check safety gate
             passed, failures = passes_safety_gate(report, best_uir, best_sim)
-            
+            if addr_mismatch:
+                passed = False
+                failures.append(
+                    'critical_addr_mismatch: same coords, divergent street numbers'
+                )
+
             if passed:
                 # Merge
                 conflicts = detect_conflicts(best_uir, report)
@@ -685,7 +753,8 @@ class IncidentClusterEngine:
                 return best_uir
             else:
                 score = best_sim['combined']
-                if score >= AUTO_MERGE_THRESHOLD:
+                # CRITICAL address mismatch hard-blocks the bypass too.
+                if not addr_mismatch and score >= AUTO_MERGE_THRESHOLD[report['urgency']]:
                     # High confidence despite safety gate failure — force merge
                     conflicts = detect_conflicts(best_uir, report)
                     merge_into_uir(best_uir, report, conflicts)
@@ -703,6 +772,12 @@ class IncidentClusterEngine:
                     best_uir['linked_uir_scores'][new_uir['uir_id']] = round(score, 4)
                     if 'possible_duplicate_nearby' not in best_uir['flags']:
                         best_uir['flags'].append('possible_duplicate_nearby')
+                    # Surface the structural-guard reason so the operator
+                    # sees why a high-similarity CRITICAL pair was kept apart.
+                    if addr_mismatch:
+                        for u in (new_uir, best_uir):
+                            if 'same_street_neighbors' not in u['flags']:
+                                u['flags'].append('same_street_neighbors')
                     self.active_uirs.append(new_uir)
                     self.stats['blocked_merges'] += 1
                     self.stats['new_uirs'] += 1
