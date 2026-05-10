@@ -7741,6 +7741,15 @@
           "demo_call_011"
         ],
         "note": "Junk audio — mic test / repeated test phrases / no actual incident content. Must be flagged as noise and NOT merged with any legitimate cluster (tests robustness to garbage input)."
+      },
+      {
+        "cluster": "★ NOVELTY DEMO — Two adjacent CRITICAL fires on Temple Road, Battaramulla (~15:30 SLST, 8 May 2026)",
+        "report_ids": [
+          "demo_call_012",
+          "demo_call_013"
+        ],
+        "expected_uirs": 2,
+        "note": "★ Demonstrates the central architectural novelty of C4: severity-asymmetric similarity thresholds. Two SEPARATE CRITICAL house fires on Temple Road, Battaramulla — different addresses (12 vs 27 Temple Road), 3 minutes apart, both reporting families trapped inside. The pair is deliberately constructed as a near-duplicate: same incident_type (fire), same town (geo_sim ~1.0 because the gazetteer is street-blind and returns the Battaramulla centroid for both), near-simultaneous (time_sim ~0.86), and lexically similar phrasing about trapped families and spreading flames (sem_sim ~0.80–0.84). Combined similarity lands in the gray zone ~0.80–0.84. EVERY existing emergency-clustering pipeline in the literature applies a SINGLE FIXED similarity threshold regardless of urgency — at a typical 0.75 cutoff, this pair AUTO-MERGES into one UIR. One fire truck is dispatched to one address; the family at the other house is left to die. C4 prevents this by formalizing the cost asymmetry as an architectural constraint: the EPSILON table makes urgency a first-class input to the merge decision (CRITICAL → eps=0.15, sim ≥ 0.85; LOW → eps=0.30, sim ≥ 0.70), and the 5-condition CRITICAL_GATE additionally requires min_semantic ≥ 0.88 and max_distance_km ≤ 0.8. This pair fails BOTH the CRITICAL eps and the semantic-gate floor, so the engine creates TWO UIRs and cross-links them via `linked_uirs` + `possible_duplicate_nearby` for operator review (see clustering.py:678–710). The operator now sees BOTH addresses on the dashboard, dispatches two trucks, and — if it actually IS one incident — clicks merge once; that click becomes a labelled training example for LearnedSimilarityModel / MLDeduplicator. The principle: false-merge on CRITICAL is potentially fatal (under-dispatch); false-split costs one operator click. C4 is the only system that encodes that asymmetry as code — eps[CRITICAL]=0.15 vs eps[LOW]=0.30 is a 2x stricter merge bar for life-threatening incidents. Expected: 2 active UIRs, both flagged `possible_duplicate_nearby` and `operator_review_required`, with a `linked_uir_scores` value in [0.78, 0.84]. Counterfactual to highlight in the demo narration: if you change the urgency on BOTH reports to LOW (e.g. blocked-driveway nuisance) the EXACT same similarity profile DOES auto-merge, because the cost of a false merge there is trivial — proving the threshold is genuinely severity-aware, not just generally strict."
       }
     ],
     "reports": [
@@ -8244,6 +8253,68 @@
           "province": "Unknown",
           "lat": null,
           "lng": null
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "12 Temple Road, Battaramulla",
+        "urgency": "CRITICAL",
+        "people_involved": 4,
+        "confidence": 0.88,
+        "key_phrases": [
+          "12 Temple Road Battaramulla",
+          "Jayasuriya mahattayage gedara ginigaththa",
+          "lamayi dennek aethule huranawa"
+        ],
+        "timestamp": "2026-05-08T10:00:00+00:00",
+        "source_id": "demo_call_012",
+        "channel": "voice",
+        "receive_time": "2026-05-08T10:00:01.000000+00:00",
+        "transcript": "Sir ikmanata enna! 12 Temple Road, Battaramulla. Jayasuriya mahattayage gedara ginigaththa. Hathara dena aethule innawa, lamayi dennek innawa. Vahale gini palaweemata patan gaththa. Gini niveem ratha ikmanata ewanna karunakara!",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_007_NOVELTY_A",
+          "actual_location": "Battaramulla — 12 Temple Road",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 4,
+          "incident_type": "fire",
+          "language": "romanized_sinhala",
+          "scenario_type": "adjacent_critical",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.8959,
+          "lng": 79.9189,
+          "_demo_role": "novelty_pair_A — would falsely merge with demo_call_013 under any fixed-threshold dedup; severity-aware eps[CRITICAL]=0.15 + 5-condition gate keep them separate"
+        }
+      },
+      {
+        "incident_type": "fire",
+        "location_raw": "27 Temple Road, Battaramulla",
+        "urgency": "CRITICAL",
+        "people_involved": 3,
+        "confidence": 0.86,
+        "key_phrases": [
+          "අංක 27 ටෙම්පල් පාර බත්තරමුල්ල",
+          "ද සිල්වා පවුලේ ගෙදර ගිනි ගෙන තියෙනවා",
+          "තුන් දෙනෙක් අතුලේ හිරවෙලා"
+        ],
+        "timestamp": "2026-05-08T10:03:00+00:00",
+        "source_id": "demo_call_013",
+        "channel": "voice",
+        "receive_time": "2026-05-08T10:03:01.000000+00:00",
+        "transcript": "ගිනිය ගිනිය! අංක 27 ටෙම්පල් පාර, බත්තරමුල්ල. ද සිල්වා පවුලේ ගෙදර ගිනි ගෙන තියෙනවා. තුන් දෙනෙක් අතුලේ ඉන්නවා. ගිනි දැල් කාමරය පුරාවටම පැතිරෙනවා. ඉක්මනට එන්න ගිනි නිවීම් රථය එවන්න!",
+        "_ground_truth": {
+          "incident_id": "DEMO_FIRE_007_NOVELTY_B",
+          "actual_location": "Battaramulla — 27 Temple Road",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 3,
+          "incident_type": "fire",
+          "language": "sinhala",
+          "scenario_type": "adjacent_critical",
+          "district": "Colombo",
+          "province": "Western",
+          "lat": 6.8959,
+          "lng": 79.9189,
+          "_demo_role": "novelty_pair_B — different house on the same street as demo_call_012; gazetteer returns identical centroid so geo_sim≈1.0; only the 5-condition CRITICAL gate (min_semantic 0.88, distinct address strings) keeps the merge from happening"
         }
       }
     ]
