@@ -8221,6 +8221,69 @@
           "lng": 79.9189,
           "_demo_role": "novelty_pair_B — kitchen gas-cylinder leak on ground floor, elderly grandmother + uncle trapped, two more cylinders waiting to explode (needs gas-shutoff specialist); different house on the same street as demo_call_012 — gazetteer returns identical Battaramulla centroid so geo_sim≈1.0 and time_sim≈0.86, but lexical content (gas/kitchen/elderly/cylinder) is deliberately distinct from demo_call_012's content (electrical/upstairs/children/wiring) so semantic similarity stays in [0.55, 0.78] and combined score lands in the gray zone [0.72, 0.86] — BELOW AUTO_MERGE_THRESHOLD=0.88 (no bypass) AND distance > eps[CRITICAL]=0.15 (no normal merge), producing two UIRs cross-linked as possible_duplicate_nearby"
         }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "අංක 45, වරගොඩ පාර, කැළණිය",
+        "urgency": "CRITICAL",
+        "people_involved": 5,
+        "confidence": 0.79,
+        "key_phrases": [
+          "අංක 45 වරගොඩ පාර කැළණිය ගංවතුර",
+          "කැළණි ගඟ පිටාර ගලලා",
+          "මෙන්ඩිස් පවුලේ ගෙදර වතුර යටවෙලා",
+          "පපුව මට්ටමට වතුර පහ දෙනෙක් ඇතුළේ"
+        ],
+        "timestamp": "2026-05-08T10:47:00+00:00",
+        "source_id": "demo_sms_007",
+        "channel": "sms",
+        "receive_time": "2026-05-08T10:47:01.000000+00:00",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_005",
+          "actual_location": "Kelaniya — 45 Waragoda Road (Mendis residence)",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 5,
+          "incident_type": "flood",
+          "language": "sinhala",
+          "scenario_type": "cross_lingual_triple",
+          "district": "Gampaha",
+          "province": "Western",
+          "lat": 6.9555,
+          "lng": 79.9222,
+          "_demo_role": "cross_lingual_A — Sinhala-script SMS from a neighbour. Tests the gazetteer's name_si index (කැළණිය → same GN as 'Kelaniya') AND the keyword bridge (ජලය/වතුර→water, ගංවතුර→flood, ගෙදර→house, පපුව→chest, ළමයි→children) which keeps the fallback embedding alive when LaBSE isn't loaded. Pairs with cross_lingual_B (demo_call_015, Tamil) — same address, zero shared characters."
+        }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "எண் 45, வரகொட வீதி, களனிய",
+        "urgency": "CRITICAL",
+        "people_involved": 5,
+        "confidence": 0.82,
+        "key_phrases": [
+          "எண் 45 வரகொட வீதி களனிய வெள்ளம்",
+          "களனி நதி பெருக்கெடுத்துள்ளது",
+          "மெண்டிஸ் குடும்பத்தின் வீடு மூழ்கியது",
+          "மார்பு அளவுக்கு தண்ணீர் ஐந்து பேர் சிக்கி"
+        ],
+        "timestamp": "2026-05-08T10:50:00+00:00",
+        "source_id": "demo_call_015",
+        "channel": "voice",
+        "receive_time": "2026-05-08T10:50:01.000000+00:00",
+        "transcript": "சார், களனி நதி பெருக்கெடுத்துள்ளது. களனிய வரகொட வீதி எண் 45, மெண்டிஸ் குடும்பத்தின் வீடு முழுவதும் தண்ணீரில் மூழ்கியுள்ளது. வீட்டுக்குள் மார்பு அளவுக்கு தண்ணீர் வந்துவிட்டது, இன்னும் உயர்ந்து வருகிறது. ஐந்து பேர் சிக்கியுள்ளனர் — இரண்டு குழந்தைகள், பெற்றோர், மற்றும் நடக்க முடியாத ஒரு பாட்டி. தயவுசெய்து உடனடியாக படகை அனுப்புங்கள்.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_005",
+          "actual_location": "Kelaniya — 45 Waragoda Road (Mendis residence)",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 5,
+          "incident_type": "flood",
+          "language": "tamil",
+          "scenario_type": "cross_lingual_triple",
+          "district": "Gampaha",
+          "province": "Western",
+          "lat": 6.955,
+          "lng": 79.9218,
+          "_demo_role": "cross_lingual_B — Tamil-script voice call from another neighbour. Pairs with cross_lingual_A (demo_sms_007, Sinhala) — Sinhala and Tamil scripts share ZERO characters so this pair is the cleanest possible cross-script merge test. Rich bridge coverage (தண்ணீர்→water, வெள்ளம்→flood, வீடு→house, குழந்தை→children, மார்பு→chest, உயர்ந்து→rising) keeps the fallback strong; LaBSE provides full cross-lingual semantics."
+        }
       }
       
   ],
@@ -8313,6 +8376,15 @@
         ],
         "expected_uirs": 2,
         "note": "★ Demonstrates the central architectural novelty of C4: severity-asymmetric similarity thresholds. Two SEPARATE CRITICAL house fires on Temple Road, Battaramulla — different addresses (12 vs 27 Temple Road), 3 minutes apart, both reporting families trapped inside. The pair is deliberately constructed as a near-duplicate: same incident_type (fire), same town (geo_sim ~1.0 because the gazetteer is street-blind and returns the Battaramulla centroid for both), near-simultaneous (time_sim ~0.86), and lexically similar phrasing about trapped families and spreading flames (sem_sim ~0.80–0.84). Combined similarity lands in the gray zone ~0.80–0.84. EVERY existing emergency-clustering pipeline in the literature applies a SINGLE FIXED similarity threshold regardless of urgency — at a typical 0.75 cutoff, this pair AUTO-MERGES into one UIR. One fire truck is dispatched to one address; the family at the other house is left to die. C4 prevents this by formalizing the cost asymmetry as an architectural constraint: the EPSILON table makes urgency a first-class input to the merge decision (CRITICAL → eps=0.15, sim ≥ 0.85; LOW → eps=0.30, sim ≥ 0.70), and the 5-condition CRITICAL_GATE additionally requires min_semantic ≥ 0.88 and max_distance_km ≤ 0.8. This pair fails BOTH the CRITICAL eps and the semantic-gate floor, so the engine creates TWO UIRs and cross-links them via `linked_uirs` + `possible_duplicate_nearby` for operator review (see clustering.py:678–710). The operator now sees BOTH addresses on the dashboard, dispatches two trucks, and — if it actually IS one incident — clicks merge once; that click becomes a labelled training example for LearnedSimilarityModel / MLDeduplicator. The principle: false-merge on CRITICAL is potentially fatal (under-dispatch); false-split costs one operator click. C4 is the only system that encodes that asymmetry as code — eps[CRITICAL]=0.15 vs eps[LOW]=0.30 is a 2x stricter merge bar for life-threatening incidents. Expected: 2 active UIRs, both flagged `possible_duplicate_nearby` and `operator_review_required`, with a `linked_uir_scores` value in [0.78, 0.84]. Counterfactual to highlight in the demo narration: if you change the urgency on BOTH reports to LOW (e.g. blocked-driveway nuisance) the EXACT same similarity profile DOES auto-merge, because the cost of a false merge there is trivial — proving the threshold is genuinely severity-aware, not just generally strict."
+      },
+      {
+        "cluster": "★ CROSS-LINGUAL DEMO — Kelaniya flood reported in Sinhala + Tamil (~16:17 SLST, 8 May 2026)",
+        "report_ids": [
+          "demo_sms_007",
+          "demo_call_015"
+        ],
+        "expected_uirs": 1,
+        "note": "★ Two reports about the SAME Kelani River flood at 45 Waragoda Road, Kelaniya (Gampaha district — one of the most flood-prone urban areas in Sri Lanka, where the Kelani River bursts its banks every monsoon). The Mendis family's house is submerged; water at chest level inside; five people trapped including two children and an elderly grandmother. demo_sms_007 (SMS, SINHALA SCRIPT) from a neighbour at 16:17 SLST. demo_call_015 (voice, TAMIL SCRIPT) from another neighbour at 16:20 SLST. Same address, same victims, same incident — but TWO different scripts that share ZERO characters (Sinhala and Tamil are entirely disjoint Brahmic scripts). This is the dedicated cross-lingual demo: it exercises (a) the gazetteer's multi-script location resolution — `කැළණිය` and `களனிய` both collapse to the same Kelaniya GN-division centroid via the name_si/name_ta index in gazetteer.py; (b) LaBSE's language-agnostic embedding — sem_sim between the Sinhala SMS and Tamil call should land ~0.78–0.88 because LaBSE projects translation-equivalents to nearby points in the 768-dim space; (c) the keyword-bridge fallback in embedder.py:38 — flood vocabulary is RICHLY bridged here (ජලය/වතුර↔தண்ணீர்→water, ගංවතුර↔வெள்ளம்→flood, ගෙදර↔வீடு→house, ළමයි↔குழந்தை→children, පපුව↔மார்பு→chest, ඉහළ↔உயர்ந்து→rising) so even without LaBSE the cross-lingual signal survives — making flood a STRONGER demo of cross-lingual robustness than fire or landslide where bridge coverage is thinner. Should AUTO-MERGE into ONE UIR with `cross_lingual=True` set on the merge decision. Counterfactual to highlight: if you swap the Tamil transcript for a Tamil-language report about a FIRE in Negombo, the system should NOT merge — proving the merge was driven by genuine cross-lingual semantic similarity, not just shared metadata fields. Expected: 1 UIR with both source_ids attached; evaluate_cross_lingual_pairs() should report `separation_gap > 0.10` if LaBSE is active."
       }
     ],
     "reports": [
@@ -8878,6 +8950,69 @@
           "lat": 6.8959,
           "lng": 79.9189,
           "_demo_role": "novelty_pair_B — kitchen gas-cylinder leak on ground floor, elderly grandmother + uncle trapped, two more cylinders waiting to explode (needs gas-shutoff specialist); different house on the same street as demo_call_012 — gazetteer returns identical Battaramulla centroid so geo_sim≈1.0 and time_sim≈0.86, but lexical content (gas/kitchen/elderly/cylinder) is deliberately distinct from demo_call_012's content (electrical/upstairs/children/wiring) so semantic similarity stays in [0.55, 0.78] and combined score lands in the gray zone [0.72, 0.86] — BELOW AUTO_MERGE_THRESHOLD=0.88 (no bypass) AND distance > eps[CRITICAL]=0.15 (no normal merge), producing two UIRs cross-linked as possible_duplicate_nearby"
+        }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "අංක 45, වරගොඩ පාර, කැළණිය",
+        "urgency": "CRITICAL",
+        "people_involved": 5,
+        "confidence": 0.79,
+        "key_phrases": [
+          "අංක 45 වරගොඩ පාර කැළණිය ගංවතුර",
+          "කැළණි ගඟ පිටාර ගලලා",
+          "මෙන්ඩිස් පවුලේ ගෙදර වතුර යටවෙලා",
+          "පපුව මට්ටමට වතුර පහ දෙනෙක් ඇතුළේ"
+        ],
+        "timestamp": "2026-05-08T10:47:00+00:00",
+        "source_id": "demo_sms_007",
+        "channel": "sms",
+        "receive_time": "2026-05-08T10:47:01.000000+00:00",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_005",
+          "actual_location": "Kelaniya — 45 Waragoda Road (Mendis residence)",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 5,
+          "incident_type": "flood",
+          "language": "sinhala",
+          "scenario_type": "cross_lingual_triple",
+          "district": "Gampaha",
+          "province": "Western",
+          "lat": 6.9555,
+          "lng": 79.9222,
+          "_demo_role": "cross_lingual_A — Sinhala-script SMS from a neighbour. Tests the gazetteer's name_si index (කැළණිය → same GN as 'Kelaniya') AND the keyword bridge (ජලය/වතුර→water, ගංවතුර→flood, ගෙදර→house, පපුව→chest, ළමයි→children) which keeps the fallback embedding alive when LaBSE isn't loaded. Pairs with cross_lingual_B (demo_call_015, Tamil) — same address, zero shared characters."
+        }
+      },
+      {
+        "incident_type": "flood",
+        "location_raw": "எண் 45, வரகொட வீதி, களனிய",
+        "urgency": "CRITICAL",
+        "people_involved": 5,
+        "confidence": 0.82,
+        "key_phrases": [
+          "எண் 45 வரகொட வீதி களனிய வெள்ளம்",
+          "களனி நதி பெருக்கெடுத்துள்ளது",
+          "மெண்டிஸ் குடும்பத்தின் வீடு மூழ்கியது",
+          "மார்பு அளவுக்கு தண்ணீர் ஐந்து பேர் சிக்கி"
+        ],
+        "timestamp": "2026-05-08T10:50:00+00:00",
+        "source_id": "demo_call_015",
+        "channel": "voice",
+        "receive_time": "2026-05-08T10:50:01.000000+00:00",
+        "transcript": "சார், களனி நதி பெருக்கெடுத்துள்ளது. களனிய வரகொட வீதி எண் 45, மெண்டிஸ் குடும்பத்தின் வீடு முழுவதும் தண்ணீரில் மூழ்கியுள்ளது. வீட்டுக்குள் மார்பு அளவுக்கு தண்ணீர் வந்துவிட்டது, இன்னும் உயர்ந்து வருகிறது. ஐந்து பேர் சிக்கியுள்ளனர் — இரண்டு குழந்தைகள், பெற்றோர், மற்றும் நடக்க முடியாத ஒரு பாட்டி. தயவுசெய்து உடனடியாக படகை அனுப்புங்கள்.",
+        "_ground_truth": {
+          "incident_id": "DEMO_FLOOD_005",
+          "actual_location": "Kelaniya — 45 Waragoda Road (Mendis residence)",
+          "actual_urgency": "CRITICAL",
+          "actual_people": 5,
+          "incident_type": "flood",
+          "language": "tamil",
+          "scenario_type": "cross_lingual_triple",
+          "district": "Gampaha",
+          "province": "Western",
+          "lat": 6.955,
+          "lng": 79.9218,
+          "_demo_role": "cross_lingual_B — Tamil-script voice call from another neighbour. Pairs with cross_lingual_A (demo_sms_007, Sinhala) — Sinhala and Tamil scripts share ZERO characters so this pair is the cleanest possible cross-script merge test. Rich bridge coverage (தண்ணீர்→water, வெள்ளம்→flood, வீடு→house, குழந்தை→children, மார்பு→chest, உயர்ந்து→rising) keeps the fallback strong; LaBSE provides full cross-lingual semantics."
         }
       }
     ]
